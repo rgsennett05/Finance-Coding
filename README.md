@@ -9,25 +9,36 @@ Everything runs on your machine. Credentials never leave it.
 
 ## Quick start
 
+You need [Node.js](https://nodejs.org) installed. Then:
+
 ```bash
 npm install
-cp .env.example .env      # then fill in the values below
-npm start                 # http://localhost:4000
+npm start
 ```
 
-Then click **Link bank** and **Link Robinhood** in the header, and hit **Sync**.
+That's it. The first run asks three short questions — all skippable — writes your settings, and
+opens the dashboard at **http://localhost:4000**.
 
-### What goes in `.env`
+To change an answer later: `npm run setup`, or just edit `.env` by hand.
 
-| Variable | Needed for | Where to get it |
+### The three questions
+
+| It asks for | Used for | If you skip it |
 |---|---|---|
-| `PLAID_CLIENT_ID`, `PLAID_SECRET` | Bank + brokerage linking | [dashboard.plaid.com](https://dashboard.plaid.com/developers/keys) |
-| `PLAID_ENV` | `sandbox` for fake data, `production` for real accounts | — |
-| `SEC_USER_AGENT` | Insider and 13F filings | Any string with your email — the SEC blocks requests without one |
-| `FINNHUB_API_KEY` | Analyst ratings (optional) | [finnhub.io/register](https://finnhub.io/register) |
+| **Your email** | The SEC requires a contact address on every request. Nothing is sent to it. | Insider and fund filings stay off |
+| **Plaid keys** | Linking your bank and Robinhood. Free signup at [dashboard.plaid.com](https://dashboard.plaid.com/signup) → Developers → Keys | Account linking stays off |
+| **Finnhub key** | Analyst ratings. Free at [finnhub.io/register](https://finnhub.io/register) | Ratings stay off, nothing else changes |
 
-Start in `sandbox`. Plaid gives you fake institutions to link so you can see the whole app
-working before requesting production access.
+Every part works independently — the SEC feeds need no Plaid, and the dashboard needs no SEC.
+
+### Trying it with fake data first
+
+Setup starts you in Plaid's **sandbox**, where you link pretend institutions with pretend
+credentials — username `user_good`, password `pass_good`, and `1234` if it asks for a code. The
+whole app works end to end on fake money, so you can see it before requesting production access.
+
+When you're ready for real accounts, change `PLAID_ENV=sandbox` to `PLAID_ENV=production` in
+`.env`, swap in your production secret, then unlink and re-link from the Settings tab.
 
 ---
 

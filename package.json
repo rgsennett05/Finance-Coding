@@ -5,7 +5,9 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node scripts/start.js",
+    "setup": "node scripts/setup.js",
+    "serve": "node src/server.js",
     "test": "node --test \"test/*.test.js\"",
     "sync": "node scripts/sync.js",
     "signals": "node scripts/signals.js",
