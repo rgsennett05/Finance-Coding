@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finance Coding</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Finance Coding</h1>
+      <p class="sub" id="envLine">loading…</p>
+    </div>
+    <div class="actions">
+      <button id="linkBank" class="btn">Link bank</button>
+      <button id="linkBrokerage" class="btn">Link Robinhood</button>
+      <button id="syncBtn" class="btn primary">Sync</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner hidden"></div>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="money">Money</button>
+    <button class="tab" data-tab="holdings">Holdings</button>
+    <button class="tab" data-tab="income">Dividends &amp; DRIP</button>
+    <button class="tab" data-tab="signals">Who I follow</button>
+    <button class="tab" data-tab="settings">Settings</button>
+  </nav>
+
+  <main>
+    <!-- Money -->
+    <section id="tab-money" class="panel">
+      <div class="grid">
+        <div class="card wide">
+          <h2>Net worth</h2>
+          <div class="bignum" id="netWorth">—</div>
+          <div class="split" id="splitBar"></div>
+          <div class="splitLegend" id="splitLegend"></div>
+        </div>
+
+        <div class="card">
+          <h2>Cash runway</h2>
+          <div class="bignum" id="runwayMonths">—</div>
+          <div class="meta" id="runwayDetail"></div>
+          <div class="meta subtle" id="runwayBasis"></div>
+        </div>
+
+        <div class="card">
+          <h2>Concentration</h2>
+          <div class="bignum" id="hhi">—</div>
+          <div class="meta" id="hhiVerdict"></div>
+          <div class="meta subtle" id="topFive"></div>
+        </div>
+
+        <div class="card wide">
+          <h2>Diversification</h2>
+          <div class="cols">
+            <div><h3>By asset class</h3><div id="byAssetClass" class="bars"></div></div>
+            <div><h3>By sector</h3><div id="bySector" class="bars"></div></div>
+          </div>
+          <p class="meta subtle" id="sectorNote"></p>
+        </div>
+
+        <div class="card wide">
+          <h2>Accounts</h2>
+          <table id="accountsTable"><tbody></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Holdings -->
+    <section id="tab-holdings" class="panel hidden">
+      <div class="card">
+        <h2>Positions <span class="meta" id="positionsSummary"></span></h2>
+        <table id="positionsTable">
+          <thead><tr>
+            <th>Ticker</th><th>Account</th><th class="num">Qty</th><th class="num">Price</th>
+            <th class="num">Value</th><th class="num">Cost basis</th><th class="num">Unrealized</th><th class="num">Weight</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Income -->
+    <section id="tab-income" class="panel hidden">
+      <div class="grid">
+        <div class="card">
+          <h2>Income received</h2>
+          <div class="bignum" id="totalIncome">—</div>
+          <div class="meta">trailing 12 months</div>
+          <div class="meta subtle" id="trailingYield"></div>
+        </div>
+        <div class="card">
+          <h2>Reinvested</h2>
+          <div class="bignum" id="totalReinvested">—</div>
+          <div class="meta" id="reinvestRate"></div>
+          <div class="meta subtle" id="heldAsCash"></div>
+        </div>
+        <div class="card wide">
+          <h2>Where it is being reinvested</h2>
+          <table id="destTable">
+            <thead><tr><th>Into</th><th class="num">Amount</th><th class="num">Shares added</th><th class="num">Current weight</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <p class="meta subtle" id="destNote"></p>
+        </div>
+        <div class="card wide">
+          <h2>What is paying you</h2>
+          <table id="sourceTable">
+            <thead><tr><th>From</th><th class="num">Amount</th><th class="num">Payments</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Signals -->
+    <section id="tab-signals" class="panel hidden">
+      <div class="card">
+        <h2>Follow someone</h2>
+        <div class="row">
+          <select id="followKind">
+            <option value="institution">Fund / 13F filer</option>
+            <option value="insider">Company or insider (Form 4)</option>
+            <option value="congress">Member of Congress</option>
+          </select>
+          <input id="followQuery" placeholder="e.g. Berkshire Hathaway, AAPL, Pelosi" />
+          <button id="followSearch" class="btn">Search</button>
+        </div>
+        <div id="searchResults" class="results"></div>
+        <div id="suggestions" class="results"></div>
+        <h3>Following</h3>
+        <div id="followList" class="chips"></div>
+        <button id="refreshSignals" class="btn primary">Refresh disclosures</button>
+        <div id="refreshReport" class="meta subtle"></div>
+      </div>
+
+      <div class="card">
+        <h2>Disclosed activity</h2>
+        <p class="meta subtle">
+          Every row is a public filing, not a live trade. Form 4s land ~2 days after the trade,
+          congressional PTRs up to 45 days, 13F holdings up to 45 days after quarter end.
+        </p>
+        <div class="row">
+          <button class="btn filter active" data-source="">All</button>
+          <button class="btn filter" data-source="form4">Insiders</button>
+          <button class="btn filter" data-source="13f">Funds</button>
+          <button class="btn filter" data-source="congress">Congress</button>
+          <button class="btn filter" data-source="analyst">Analysts</button>
+        </div>
+        <table id="signalsTable">
+          <thead><tr><th>Who</th><th>What</th><th>Security</th><th class="num">Size</th><th>Filed</th><th>Lag</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="tab-settings" class="panel hidden">
+      <div class="card">
+        <h2>Preferences</h2>
+        <label>Target emergency buffer (months)
+          <input id="pref_target_buffer_months" type="number" min="0" step="1" />
+        </label>
+        <label>Warn when one position exceeds (% of portfolio)
+          <input id="pref_concentration_warn_pct" type="number" min="1" step="1" />
+        </label>
+        <label>Signal lookback (days)
+          <input id="pref_signal_lookback_days" type="number" min="7" step="1" />
+        </label>
+        <button id="savePrefs" class="btn primary">Save</button>
+      </div>
+
+      <div class="card">
+        <h2>Linked institutions</h2>
+        <table id="itemsTable"><tbody></tbody></table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

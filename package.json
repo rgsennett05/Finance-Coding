@@ -1,0 +1,37 @@
+{
+  "name": "finance-coding",
+  "version": "0.1.0",
+  "description": "Personal money tracker: bank vs. brokerage, diversification, dividend reinvestment, and disclosed trades from investors you follow.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test \"test/*.test.js\"",
+    "sync": "node scripts/sync.js",
+    "signals": "node scripts/signals.js",
+    "snapshot": "node scripts/snapshot.js",
+    "follow": "node scripts/follow.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rgsennett05/Finance-Coding.git"
+  },
+  "keywords": [
+    "plaid",
+    "finance",
+    "portfolio",
+    "sec-edgar"
+  ],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rgsennett05/Finance-Coding/issues"
+  },
+  "homepage": "https://github.com/rgsennett05/Finance-Coding#readme",
+  "dependencies": {
+    "adm-zip": "^0.6.0",
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "plaid": "^45.0.0"
+  }
+}
