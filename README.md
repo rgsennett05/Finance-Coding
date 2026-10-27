@@ -5,6 +5,8 @@ portfolio is, where dividends get reinvested, and what the investors you follow 
 
 Everything runs on your machine. Credentials never leave it.
 
+**New to coding?** Start with [Coding for Dummies](CODING_FOR_DUMMIES.md) — a from-zero walkthrough.
+
 ---
 
 ## Quick start
