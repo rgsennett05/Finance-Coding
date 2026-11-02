@@ -177,6 +177,19 @@ npm test              # runs without network access
 
 ---
 
+## Agent city (research agents)
+
+`city/` is a separate research layer: a set of agents drawn as buildings in a city that pick stocks
+from a watchlist using momentum, a SEC-sourced DCF, and risk scores, and run nightly on GitHub
+Actions. See **[city/README.md](city/README.md)** — it's also the guide to wiring in libraries from
+GitHub.
+
+```bash
+npm run city:offline
+```
+
+---
+
 ## Security
 
 - `.env` and `*.db` are gitignored. Plaid access tokens live in your local SQLite file.
