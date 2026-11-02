@@ -2,6 +2,7 @@
 #
 # Setup (once): repo Settings → Secrets and variables → Actions → New secret
 #   SEC_USER_AGENT     e.g. "TickerCity you@example.com"   (needed for DCFs)
+#   FINNHUB_API_KEY    optional — live quotes via the finnhub-live mod
 #   ANTHROPIC_API_KEY  optional — opens the Research Library
 #
 # Results are committed to city/state/ and attached to each run as an artifact.
@@ -34,6 +35,7 @@ jobs:
       - name: Run the city
         env:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: npm run city
       - uses: actions/upload-artifact@v4

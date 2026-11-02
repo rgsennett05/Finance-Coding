@@ -7,6 +7,7 @@
  *   npm run city -- --offline    # no network; synthetic prices, no SEC/Claude
  *   npm run city -- --only quant # one agent plus whatever it depends on
  */
+import 'dotenv/config';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';

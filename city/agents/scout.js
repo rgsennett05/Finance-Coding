@@ -13,8 +13,11 @@ export default {
       prices[ticker] = await use('prices', { ticker, days: config.lookbackDays });
     }
     const synthetic = Object.values(prices).filter((p) => p.synthetic).length;
+    const live = Object.values(prices).filter((p) => p.live).length;
     return {
-      summary: `Priced ${config.watchlist.length} tickers` + (synthetic ? ` (${synthetic} synthetic — data source unreachable)` : ''),
+      summary: `Priced ${config.watchlist.length} tickers` +
+        (live ? ` · ${live} live quotes` : '') +
+        (synthetic ? ` (${synthetic} synthetic — data source unreachable)` : ''),
       warnings: synthetic ? [`${synthetic} series are synthetic, not market data`] : [],
       data: prices,
     };

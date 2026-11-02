@@ -10,6 +10,7 @@ import { rsi, maxDrawdown } from '../city/tools/indicators.js';
 import { Registry } from '../city/registry.js';
 import { order, runCity } from '../city/run.js';
 import { renderCity } from '../city/render.js';
+import { applyQuote } from '../city/mods/finnhub-live/index.js';
 
 const yearsAgo = (n) => new Date(Date.now() - n * 365.25 * 86400000).toISOString().slice(0, 10);
 
@@ -94,4 +95,10 @@ test('a full offline shift produces picks and a renderable map', async () => {
   assert.equal(state.board.mayor.picks.length, 3);
   assert.equal(state.agents.find((a) => a.id === 'research').status, 'closed');
   assert.match(renderCity(state), /Tonight's picks/);
+});
+
+test('a live quote replaces today\'s bar or appends a new one', () => {
+  const series = [{ date: '2026-10-30', close: 10 }, { date: '2026-11-02', close: 11 }];
+  assert.deepEqual(applyQuote(series, { price: 12, at: '2026-11-02T18:00:00Z' }).map((p) => p.close), [10, 12]);
+  assert.deepEqual(applyQuote(series, { price: 13, at: '2026-11-03T15:00:00Z' }).map((p) => p.close), [10, 11, 13]);
 });

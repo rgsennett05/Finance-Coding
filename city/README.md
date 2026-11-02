@@ -45,6 +45,7 @@ Open `city/state/city.html` in a browser. Edit the watchlist, DCF assumptions an
 1. Push this branch and merge it into your default branch (schedules only run from there).
 2. On GitHub: **Settings → Secrets and variables → Actions → New repository secret**
    - `SEC_USER_AGENT` — e.g. `TickerCity you@example.com` (the SEC requires a contact)
+   - `FINNHUB_API_KEY` — optional; turns on live quotes (`mods/finnhub-live`)
    - `ANTHROPIC_API_KEY` — optional; without it the Library just stays closed
 3. **Actions → Agent City → Run workflow** to try it now.
 

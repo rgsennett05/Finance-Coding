@@ -1,15 +1,31 @@
 {
   "name": "Ticker City",
-  "watchlist": ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "JPM", "KO", "XOM"],
+  "watchlist": [
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "GOOGL",
+    "AMZN",
+    "JPM",
+    "KO",
+    "XOM"
+  ],
   "lookbackDays": 365,
   "dcf": {
     "projectionYears": 5,
     "discountRate": 0.09,
     "terminalGrowth": 0.025,
-    "maxGrowth": 0.20,
+    "maxGrowth": 0.2,
     "minGrowth": -0.05
   },
-  "weights": { "momentum": 0.35, "value": 0.40, "risk": 0.25 },
+  "weights": {
+    "momentum": 0.35,
+    "value": 0.4,
+    "risk": 0.25
+  },
   "picks": 3,
-  "mods": ["technical-indicators"]
+  "mods": [
+    "technical-indicators",
+    "finnhub-live"
+  ]
 }
