@@ -1,0 +1,50 @@
+# Runs the fund once every weekday on GitHub's servers — your computer can be off.
+#
+# One-time setup: repo Settings → Secrets and variables → Actions → New repository secret
+#   ALPACA_API_KEY      your Alpaca PAPER key (starts with PK)
+#   ALPACA_SECRET_KEY   your Alpaca PAPER secret
+#   ANTHROPIC_API_KEY   optional — not used while the Portfolio Manager is in rules mode
+#
+# Each run's log (every agent's reasoning) is attached to the run as "fund-logs"
+# for 90 days. Logs are not committed to the repository.
+name: Daily fund run
+
+on:
+  schedule:
+    # 15:07 UTC = 10:07am New York in winter, 11:07am in summer — market is open either way.
+    - cron: "7 15 * * 1-5"
+  workflow_dispatch:          # "Run workflow" button in the Actions tab
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-fund-run
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Run the checks
+        run: pytest -q
+      - name: Run the fund (paper trading)
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python -m trading.run --yes
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fund-logs
+          path: logs/run_*.json
+          retention-days: 90
+          if-no-files-found: ignore

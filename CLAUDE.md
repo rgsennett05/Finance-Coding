@@ -81,6 +81,7 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 ├── logs/            # decision + trade logs (Auditor writes here; not uploaded to GitHub)
 ├── dashboard/       # Streamlit app and city view
 ├── .streamlit/      # Streamlit settings (no usage tracking, minimal toolbar)
+├── .github/         # daily automatic run on GitHub Actions
 └── tests/           # simple checks that things work (run: pytest)
 ```
 
@@ -108,7 +109,8 @@ agent's reasoning for the latest run.
       `dashboard/app.py`). Chart colors follow the dataviz palette (fund blue `#2a78d6`, VOO orange
       `#eb6834`); the chart waits for 2+ days of history rather than drawing a misleading line.
 - [ ] Owner opens it and confirms they understand what happened today (needs filled positions)
-- [ ] Daily automatic run so the value-over-time history builds up
+- [x] Daily automatic run — `.github/workflows/daily-run.yml`, weekdays 15:07 UTC (10:07am ET winter,
+      11:07am ET summer). Runs `pytest` first; logs attached to each run as `fund-logs` for 90 days.
 
 **Done when:** I can open it in a browser and understand what happened today.
 
