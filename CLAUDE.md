@@ -91,8 +91,9 @@ Start small: Market Analyst, Risk Manager, Portfolio Manager only.
 - [x] Market Analyst — `python -m agents.market_analyst` (AI explanations switch on once
       `ANTHROPIC_API_KEY` is set; until then explanations are rule-based and labeled so)
 - [x] Risk Manager — plain code in `agents/risk_manager.py`; dry run: `python -m agents.risk_manager`
-- [ ] Portfolio Manager — owner chose **rules mode (free)** for now; AI mode (Claude Opus) switches
-      on later when an `ANTHROPIC_API_KEY` is added
+- [x] Portfolio Manager — **rules mode (free)**, the owner's choice for now: buy bullish stocks we
+      don't own, sell owned stocks that turn bearish, hold the rest; benchmark never traded.
+      AI mode (Claude Opus) is a later addition and needs an `ANTHROPIC_API_KEY`.
 - [ ] Place paper trades and log every decision
 - [ ] One command runs the full loop on the watchlist
 

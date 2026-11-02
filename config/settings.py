@@ -23,6 +23,7 @@ class Settings:
     risk: RiskLimits
     routine_model: str
     portfolio_manager_model: str
+    portfolio_manager_mode: str = "rules"
 
 
 def load_settings(path: Path = SETTINGS_PATH) -> Settings:
@@ -40,10 +41,15 @@ def load_settings(path: Path = SETTINGS_PATH) -> Settings:
     if not tickers:
         raise ValueError("watchlist.tickers is empty")
 
+    pm_mode = raw.get("portfolio_manager", {}).get("mode", "rules")
+    if pm_mode not in ("rules", "ai"):
+        raise ValueError(f'portfolio_manager.mode must be "rules" or "ai", got "{pm_mode}"')
+
     return Settings(
         tickers=tickers,
         benchmark=raw["watchlist"]["benchmark"].upper(),
         risk=risk,
         routine_model=raw["models"]["routine"],
         portfolio_manager_model=raw["models"]["portfolio_manager"],
+        portfolio_manager_mode=pm_mode,
     )

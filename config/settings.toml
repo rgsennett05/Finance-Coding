@@ -12,6 +12,10 @@ min_cash_pct = 0.10       # keep at least 10% in cash
 max_open_positions = 10
 stop_loss_pct = 0.08      # every position gets a stop-loss 8% below entry
 
+[portfolio_manager]
+# "rules" = free, rule-based decisions. "ai" = Claude Opus decides (not built yet; needs ANTHROPIC_API_KEY).
+mode = "rules"
+
 [models]
 # Routine agents use a cheaper model; the Portfolio Manager makes final calls.
 routine = "claude-haiku-5-5"
