@@ -3,9 +3,9 @@
  *
  * Free, official, and keyed by ticker → CIK. Needs SEC_USER_AGENT with a
  * contact email (the SEC blocks anonymous requests). Reuses the throttled
- * client from src/signals/sec.js.
+ * client in city/lib/sec.js.
  */
-import { secFetch, cikForTicker, padCik } from '../../src/signals/sec.js';
+import { secFetch, cikForTicker, padCik } from '../lib/sec.js';
 
 // First concept that has data wins — companies tag the same idea differently.
 const CONCEPTS = {

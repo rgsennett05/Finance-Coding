@@ -1,10 +1,4 @@
 node_modules/
 .env
-*.db
-*.db-journal
-*.db-wal
-*.db-shm
-data/
-snapshots/
 .DS_Store
 city/state/
