@@ -35,7 +35,10 @@ def load_keys() -> AlpacaKeys:
     api_key = os.getenv("ALPACA_API_KEY", "").strip()
     secret_key = os.getenv("ALPACA_SECRET_KEY", "").strip()
     if not api_key or not secret_key:
-        raise RuntimeError("ALPACA_API_KEY and ALPACA_SECRET_KEY are missing. Copy .env.example to .env and fill them in.")
+        raise RuntimeError(
+            "ALPACA_API_KEY and ALPACA_SECRET_KEY are missing. On your computer: copy .env.example to .env "
+            "and fill them in. On GitHub: add them under Settings → Secrets and variables → Actions."
+        )
     check_paper_key(api_key)
     return AlpacaKeys(api_key, secret_key)
 
