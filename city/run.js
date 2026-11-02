@@ -116,7 +116,21 @@ export function saveState(state) {
   fs.writeFileSync(path.join(stateDir, 'city.html'), renderCity(state));
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+const isMain = import.meta.url === pathToFileURL(process.argv[1]).href;
+
+// Node's built-in fetch ignores HTTPS_PROXY unless NODE_USE_ENV_PROXY is set at
+// startup. Behind a proxy (corporate networks, cloud sandboxes) restart once with
+// it on; everywhere else this does nothing.
+if (isMain && process.env.HTTPS_PROXY && !process.env.NODE_USE_ENV_PROXY) {
+  const { spawnSync } = await import('node:child_process');
+  const r = spawnSync(process.execPath, ['--disable-warning=UNDICI-EHPA', ...process.argv.slice(1)], {
+    stdio: 'inherit',
+    env: { ...process.env, NODE_USE_ENV_PROXY: '1' },
+  });
+  process.exit(r.status ?? 1);
+}
+
+if (isMain) {
   const args = process.argv.slice(2);
   const onlyIdx = args.indexOf('--only');
   console.log('🏙️  Opening the city…');

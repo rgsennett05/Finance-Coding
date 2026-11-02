@@ -19,12 +19,20 @@ const CONCEPTS = {
 
 const DAY = 86400000;
 
-/** Annual (10-K, ~12-month) values keyed by fiscal-year end date. */
+/**
+ * Annual (10-K, ~12-month) values keyed by fiscal-year end date.
+ *
+ * Companies switch tags over time (NVIDIA and Amazon moved capex from
+ * PaymentsToAcquirePropertyPlantAndEquipment to PaymentsToAcquireProductiveAssets),
+ * so every listed concept is read and merged per year; for a year reported
+ * under several tags, the one listed first wins.
+ */
 export function annualSeries(facts, concepts, { instant = false } = {}) {
-  for (const concept of concepts) {
+  const byEnd = new Map();
+  const used = new Set();
+  concepts.forEach((concept, rank) => {
     const units = facts?.facts?.['us-gaap']?.[concept]?.units?.USD;
-    if (!units) continue;
-    const byEnd = new Map();
+    if (!units) return;
     for (const u of units) {
       if (u.form !== '10-K') continue;
       if (!instant) {
@@ -32,12 +40,30 @@ export function annualSeries(facts, concepts, { instant = false } = {}) {
         if (!(days > 350 && days < 380)) continue;
       }
       const prev = byEnd.get(u.end);
-      if (!prev || u.filed > prev.filed) byEnd.set(u.end, u); // keep the latest restatement
+      // Prefer the higher-priority concept; within one concept keep the latest restatement.
+      if (!prev || rank < prev.rank || (rank === prev.rank && u.filed > prev.filed)) {
+        byEnd.set(u.end, { ...u, rank, concept });
+      }
     }
-    const rows = [...byEnd.values()].sort((a, b) => a.end.localeCompare(b.end)).map((u) => ({ end: u.end, value: u.val }));
-    if (rows.length) return { concept, rows };
+  });
+  const rows = [...byEnd.values()].sort((a, b) => a.end.localeCompare(b.end));
+  rows.forEach((r) => used.add(r.concept));
+  return { concepts: [...used], rows: rows.map((u) => ({ end: u.end, value: u.val })) };
+}
+
+/** Latest share count: cover-page figure, then balance sheet, then diluted weighted average. */
+export function latestShares(facts) {
+  const sources = [
+    facts?.facts?.dei?.EntityCommonStockSharesOutstanding?.units?.shares,
+    facts?.facts?.['us-gaap']?.CommonStockSharesOutstanding?.units?.shares,
+    facts?.facts?.['us-gaap']?.WeightedAverageNumberOfDilutedSharesOutstanding?.units?.shares,
+  ];
+  for (const rows of sources) {
+    if (!rows?.length) continue;
+    const latest = [...rows].sort((a, b) => a.end.localeCompare(b.end) || a.filed.localeCompare(b.filed)).at(-1);
+    if (latest.val > 0) return { value: latest.val, asOf: latest.end };
   }
-  return { concept: null, rows: [] };
+  return { value: null, asOf: null };
 }
 
 export function extractFundamentals(facts) {
@@ -48,9 +74,7 @@ export function extractFundamentals(facts) {
   const fcf = ocf.rows
     .filter((r) => capexByEnd.has(r.end))
     .map((r) => ({ end: r.end, value: r.value - capexByEnd.get(r.end) }));
-
-  const sharesRows = facts?.facts?.dei?.EntityCommonStockSharesOutstanding?.units?.shares ?? [];
-  const shares = sharesRows.length ? [...sharesRows].sort((a, b) => a.end.localeCompare(b.end)).at(-1).val : null;
+  const shares = latestShares(facts);
 
   return {
     entityName: facts?.entityName ?? null,
@@ -59,7 +83,9 @@ export function extractFundamentals(facts) {
     netIncome: get('netIncome').rows.slice(-6),
     cash: get('cash', { instant: true }).rows.at(-1)?.value ?? null,
     debt: get('debt', { instant: true }).rows.at(-1)?.value ?? 0,
-    sharesOutstanding: shares,
+    sharesOutstanding: shares.value,
+    sharesAsOf: shares.asOf,
+    hasAnnualReports: ocf.rows.length > 0,
   };
 }
 

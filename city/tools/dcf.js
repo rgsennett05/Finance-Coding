@@ -40,7 +40,11 @@ export function valuePerShare({ baseFcf, g0, years, r, gT, cash, debt, shares })
 
 export function runDcf(fund, price, a) {
   const fcf = fund.freeCashFlow ?? [];
-  if (!fund.sharesOutstanding || !fcf.length) return { ok: false, reason: 'missing FCF or share count' };
+  if (fund.hasAnnualReports === false) return { ok: false, reason: 'no annual 10-K cash flows under this SEC filer (new filer ID, or a bank/insurer that doesn\'t report capex)' };
+  if (!fcf.length) return { ok: false, reason: 'no year with both operating cash flow and capex reported' };
+  if (!fund.sharesOutstanding) return { ok: false, reason: 'no share count in SEC filings' };
+  const ageYears = (Date.now() - new Date(fcf.at(-1).end)) / (365.25 * 86400000);
+  if (ageYears > 2) return { ok: false, reason: `latest free cash flow is from ${fcf.at(-1).end} — too stale to value` };
   // Normalize: average of the last 3 years smooths one-off swings.
   const recent = fcf.slice(-3).map((r) => r.value);
   const baseFcf = recent.reduce((s, v) => s + v, 0) / recent.length;
