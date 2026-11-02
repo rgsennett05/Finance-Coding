@@ -94,8 +94,9 @@ Start small: Market Analyst, Risk Manager, Portfolio Manager only.
 - [x] Portfolio Manager — **rules mode (free)**, the owner's choice for now: buy bullish stocks we
       don't own, sell owned stocks that turn bearish, hold the rest; benchmark never traded.
       AI mode (Claude Opus) is a later addition and needs an `ANTHROPIC_API_KEY`.
-- [ ] Place paper trades and log every decision
-- [ ] One command runs the full loop on the watchlist
+- [x] Place paper trades and log every decision — `trading/orders.py`, `trading/journal.py`
+- [ ] One command runs the full loop on the watchlist — `python -m trading.run` (dry run works;
+      waiting on the first real paper run)
 
 **Done when:** one command runs the full loop end to end without errors.
 

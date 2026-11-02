@@ -29,7 +29,16 @@ python -m data.broker            # confirms your Alpaca paper account connects
 | `ALPACA_API_KEY`, `ALPACA_SECRET_KEY` | Market data and paper trades | [alpaca.markets](https://alpaca.markets) → switch to **Paper Trading** → API Keys. Paper keys start with `PK`. |
 | `ANTHROPIC_API_KEY` | The AI agents | [console.anthropic.com](https://console.anthropic.com) → API Keys |
 
-## Running the agents
+## Running the fund
+
+```bash
+python -m trading.run --dry-run   # full loop, preview only — no orders
+python -m trading.run             # full loop, places PAPER orders (asks you to confirm)
+```
+
+Each run writes a log to `logs/` (kept on your computer, not uploaded).
+
+Each agent can also be run on its own:
 
 ```bash
 python -m agents.market_analyst   # technical signals + plain-English read for each ticker
