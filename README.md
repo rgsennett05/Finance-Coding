@@ -46,6 +46,16 @@ python -m agents.risk_manager     # dry run: what the risk limits would allow (n
 python -m agents.portfolio_manager  # dry run: buy/sell/hold decisions + risk review (no orders placed)
 ```
 
+## The dashboard
+
+```bash
+streamlit run dashboard/app.py
+```
+
+Then open the address it prints (usually http://localhost:8501). It shows portfolio value vs. VOO,
+open positions, recent orders, and what each agent decided in the latest run. Press **Refresh** to
+reload from Alpaca.
+
 ## Settings
 Watchlist, risk limits and which Claude model each agent uses are in
 [`config/settings.toml`](config/settings.toml).

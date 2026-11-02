@@ -80,6 +80,7 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 ├── trading/         # order placement (paper only)
 ├── logs/            # decision + trade logs (Auditor writes here; not uploaded to GitHub)
 ├── dashboard/       # Streamlit app and city view
+├── .streamlit/      # Streamlit settings (no usage tracking, minimal toolbar)
 └── tests/           # simple checks that things work (run: pytest)
 ```
 
@@ -103,6 +104,12 @@ Start small: Market Analyst, Risk Manager, Portfolio Manager only.
 ### Stage 2 — Dashboard ← current stage
 Streamlit app showing: portfolio value over time vs. VOO, open positions, recent trades, and each
 agent's reasoning for the latest run.
+- [x] First version — `streamlit run dashboard/app.py` (data in `dashboard/data.py`, page in
+      `dashboard/app.py`). Chart colors follow the dataviz palette (fund blue `#2a78d6`, VOO orange
+      `#eb6834`); the chart waits for 2+ days of history rather than drawing a misleading line.
+- [ ] Owner opens it and confirms they understand what happened today (needs filled positions)
+- [ ] Daily automatic run so the value-over-time history builds up
+
 **Done when:** I can open it in a browser and understand what happened today.
 
 ### Stage 3 — Grow the team + the city
