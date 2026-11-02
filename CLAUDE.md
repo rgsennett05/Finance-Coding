@@ -90,8 +90,9 @@ Start small: Market Analyst, Risk Manager, Portfolio Manager only.
 - [x] Connect Alpaca paper account (with the paper-only safety check) — `python -m data.broker`
 - [x] Market Analyst — `python -m agents.market_analyst` (AI explanations switch on once
       `ANTHROPIC_API_KEY` is set; until then explanations are rule-based and labeled so)
-- [ ] Risk Manager
-- [ ] Portfolio Manager
+- [x] Risk Manager — plain code in `agents/risk_manager.py`; dry run: `python -m agents.risk_manager`
+- [ ] Portfolio Manager — owner chose **rules mode (free)** for now; AI mode (Claude Opus) switches
+      on later when an `ANTHROPIC_API_KEY` is added
 - [ ] Place paper trades and log every decision
 - [ ] One command runs the full loop on the watchlist
 

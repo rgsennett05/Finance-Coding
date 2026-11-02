@@ -33,6 +33,7 @@ python -m data.broker            # confirms your Alpaca paper account connects
 
 ```bash
 python -m agents.market_analyst   # technical signals + plain-English read for each ticker
+python -m agents.risk_manager     # dry run: what the risk limits would allow (no orders placed)
 ```
 
 ## Settings
