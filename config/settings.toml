@@ -1,0 +1,18 @@
+# Trading City settings. Edit these, not the code.
+
+[watchlist]
+# 5–10 tickers for Stage 1.
+tickers = ["AAPL", "MSFT", "NVDA", "JPM", "KO", "XOM", "VOO"]
+benchmark = "VOO"
+
+[risk]
+# Enforced by plain code in the Risk Manager — the AI cannot override these.
+max_position_pct = 0.10   # no single position over 10% of the portfolio
+min_cash_pct = 0.10       # keep at least 10% in cash
+max_open_positions = 10
+stop_loss_pct = 0.08      # every position gets a stop-loss 8% below entry
+
+[models]
+# Routine agents use a cheaper model; the Portfolio Manager makes final calls.
+routine = "claude-haiku-5-5"
+portfolio_manager = "claude-opus-5-5"

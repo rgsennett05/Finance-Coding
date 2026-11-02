@@ -1,4 +1,15 @@
-node_modules/
+# Secrets
 .env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Run output (decision and trade logs stay on your machine)
+logs/*
+!logs/.gitkeep
+
+# OS clutter
 .DS_Store
-city/state/
