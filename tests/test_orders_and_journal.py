@@ -61,6 +61,12 @@ def test_no_new_buys_while_earlier_buys_wait():
     assert c.submitted == [] and res[0].status == "skipped"
 
 
+def test_dry_run_preview_matches_a_real_run():
+    c = FakeClient([NS(id="o1", symbol="OLD", side="buy")])
+    res = orders.place([buy("NEW")], client=c, dry_run=True)
+    assert res[0].status == "skipped"
+
+
 def test_sell_cancels_that_stocks_stop_first():
     c = FakeClient([NS(id="stop1", symbol="AAA", side="sell"), NS(id="other", symbol="BBB", side="sell")])
     orders.place([RiskDecision("AAA", "sell", True, 5, 100.0)], client=c, dry_run=False)
@@ -78,3 +84,16 @@ def test_journal_writes_readable_json(tmp_path):
     path = journal.write({"orders": [orders.OrderResult("A", "buy", 1, "dry-run", "x")], "n": float("nan")}, tmp_path)
     data = json.loads(path.read_text())
     assert data["orders"][0]["ticker"] == "A" and data["n"] is None and "run_at" in data
+
+
+def test_real_alpaca_client_is_recognized_as_paper(monkeypatch):
+    # Uses the actual alpaca-py client (no network), not the fake one above.
+    from data.broker import trading_client
+    monkeypatch.setenv("ALPACA_API_KEY", "PKTEST")
+    monkeypatch.setenv("ALPACA_SECRET_KEY", "secret")
+    assert orders.is_paper(trading_client())
+
+
+def test_live_alpaca_client_is_not_paper():
+    from alpaca.trading.client import TradingClient
+    assert not orders.is_paper(TradingClient("AKLIVE", "secret", paper=False))

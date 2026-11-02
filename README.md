@@ -6,7 +6,7 @@ where each agent is a building that lights up as it works.
 
 > **Paper trading only.** This project never places real-money trades.
 
-**Status:** Stage 1 — building the working core. See the roadmap in [CLAUDE.md](CLAUDE.md).
+**Status:** Stage 1 complete — the fund paper trades from one command. Next: Stage 2, the dashboard. See the roadmap in [CLAUDE.md](CLAUDE.md).
 
 ---
 

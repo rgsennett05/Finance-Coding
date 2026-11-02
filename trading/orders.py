@@ -60,15 +60,18 @@ def pending_buys(orders) -> set[str]:
     return {o.symbol for o in orders if str(getattr(o.side, "value", o.side)) == "buy"}
 
 
+def is_paper(client) -> bool:
+    """True only if the client's address is Alpaca's paper endpoint."""
+    url = getattr(client, "_base_url", "")
+    return PAPER_URL_MARK in str(getattr(url, "value", url))
+
+
 def place(decisions: list[RiskDecision], client=None, dry_run: bool = True) -> list[OrderResult]:
     approved = [d for d in decisions if d.approved]
-    if dry_run:
-        return [OrderResult(d.ticker, d.side, d.qty, "dry-run", "Not sent (dry run).") for d in approved]
-
     if client is None:
         from data.broker import trading_client
         client = trading_client()
-    if PAPER_URL_MARK not in str(getattr(client, "_base_url", "")):
+    if not is_paper(client):
         raise RuntimeError("STOP: trading client is not pointed at Alpaca's paper endpoint. No orders sent.")
 
     orders = open_orders(client)
@@ -76,6 +79,14 @@ def place(decisions: list[RiskDecision], client=None, dry_run: bool = True) -> l
     results: list[OrderResult] = []
 
     for d in sorted(approved, key=lambda d: d.side != "sell"):
+        if d.side == "buy" and waiting:
+            results.append(OrderResult(d.ticker, "buy", d.qty, "skipped",
+                f"Earlier buy orders are still waiting to fill ({', '.join(sorted(waiting))}); "
+                "no new buys until they do."))
+            continue
+        if dry_run:
+            results.append(OrderResult(d.ticker, d.side, d.qty, "dry-run", "Not sent (dry run)."))
+            continue
         try:
             if d.side == "sell":
                 for o in orders:
@@ -83,11 +94,6 @@ def place(decisions: list[RiskDecision], client=None, dry_run: bool = True) -> l
                         client.cancel_order_by_id(o.id)
                 sent = client.submit_order(sell_request(d))
             else:
-                if waiting:
-                    results.append(OrderResult(d.ticker, "buy", d.qty, "skipped",
-                        f"Earlier buy orders are still waiting to fill ({', '.join(sorted(waiting))}); "
-                        "no new buys until they do."))
-                    continue
                 sent = client.submit_order(buy_request(d))
             results.append(OrderResult(d.ticker, d.side, d.qty, "submitted",
                                        f"Order accepted, status {getattr(sent.status, 'value', sent.status)}.",

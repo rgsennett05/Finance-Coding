@@ -84,7 +84,7 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 ```
 
 ## Roadmap
-### Stage 1 — Working core ← current stage
+### Stage 1 — Working core ✅ complete (2026-11-02)
 Start small: Market Analyst, Risk Manager, Portfolio Manager only.
 - [x] Project skeleton (folders, settings, tests, docs)
 - [x] Connect Alpaca paper account (with the paper-only safety check) — `python -m data.broker`
@@ -95,12 +95,12 @@ Start small: Market Analyst, Risk Manager, Portfolio Manager only.
       don't own, sell owned stocks that turn bearish, hold the rest; benchmark never traded.
       AI mode (Claude Opus) is a later addition and needs an `ANTHROPIC_API_KEY`.
 - [x] Place paper trades and log every decision — `trading/orders.py`, `trading/journal.py`
-- [ ] One command runs the full loop on the watchlist — `python -m trading.run` (dry run works;
-      waiting on the first real paper run)
+- [x] One command runs the full loop on the watchlist — `python -m trading.run`. First paper orders
+      placed 2026-11-02 (XOM, KO, AAPL with stop-losses).
 
 **Done when:** one command runs the full loop end to end without errors.
 
-### Stage 2 — Dashboard
+### Stage 2 — Dashboard ← current stage
 Streamlit app showing: portfolio value over time vs. VOO, open positions, recent trades, and each
 agent's reasoning for the latest run.
 **Done when:** I can open it in a browser and understand what happened today.
