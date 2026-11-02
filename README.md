@@ -20,6 +20,7 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env             # then open .env and paste in your keys
 pytest                           # checks everything is wired up
+python -m data.broker            # confirms your Alpaca paper account connects
 ```
 
 ### Keys you need
