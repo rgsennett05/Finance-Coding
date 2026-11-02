@@ -14,11 +14,15 @@ export default {
     }
     const synthetic = Object.values(prices).filter((p) => p.synthetic).length;
     const live = Object.values(prices).filter((p) => p.live).length;
+    const liveErrors = [...new Set(Object.values(prices).map((p) => p.liveError).filter(Boolean))];
     return {
       summary: `Priced ${config.watchlist.length} tickers` +
         (live ? ` · ${live} live quotes` : '') +
         (synthetic ? ` (${synthetic} synthetic — data source unreachable)` : ''),
-      warnings: synthetic ? [`${synthetic} series are synthetic, not market data`] : [],
+      warnings: [
+        ...(synthetic ? [`${synthetic} series are synthetic, not market data`] : []),
+        ...liveErrors.map((e) => `Live quotes unavailable, using last daily close: ${e}`),
+      ],
       data: prices,
     };
   },

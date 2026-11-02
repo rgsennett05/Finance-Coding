@@ -12,6 +12,7 @@ const API = 'https://finnhub.io/api/v1';
 
 export async function liveQuote(ticker, key) {
   const res = await fetch(`${API}/quote?symbol=${encodeURIComponent(ticker)}&token=${key}`);
+  if (res.status === 401) throw new Error('Finnhub rejected the key (401) — re-check FINNHUB_API_KEY');
   if (res.status === 429) throw new Error('Finnhub rate limit (60/min on the free tier)');
   if (!res.ok) throw new Error(`Finnhub ${res.status}`);
   const q = await res.json();
@@ -39,7 +40,8 @@ export default {
   name: 'finnhub-live',
   description: 'Overlays real-time Finnhub quotes on the daily price history.',
   async register(registry) {
-    const key = process.env.FINNHUB_API_KEY;
+    // Trim stray spaces/newlines/quotes that sneak in when pasting a key into a secret.
+    const key = (process.env.FINNHUB_API_KEY || '').trim().replace(/^["']|["']$/g, '');
     if (!key) throw new Error('FINNHUB_API_KEY not set');
     const history = registry.get('prices');
 
@@ -55,7 +57,7 @@ export default {
             return { ...base, source: `${base.source}+finnhub`, live: quote, series: applyQuote(base.series, quote) };
           } catch (err) {
             ctx.log?.(`finnhub: ${input.ticker} — ${err.message}; using ${base.source} close`);
-            return base;
+            return { ...base, liveError: err.message };
           }
         },
       },

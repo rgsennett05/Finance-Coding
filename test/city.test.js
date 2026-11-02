@@ -102,3 +102,11 @@ test('a live quote replaces today\'s bar or appends a new one', () => {
   assert.deepEqual(applyQuote(series, { price: 12, at: '2026-11-02T18:00:00Z' }).map((p) => p.close), [10, 12]);
   assert.deepEqual(applyQuote(series, { price: 13, at: '2026-11-03T15:00:00Z' }).map((p) => p.close), [10, 11, 13]);
 });
+
+test('a rejected live quote is reported on the map, not hidden', async () => {
+  const { default: scout } = await import('../city/agents/scout.js');
+  const use = async (_, { ticker }) => ({ ticker, synthetic: false, series: [{ date: '2026-11-02', close: 1 }], liveError: 'Finnhub rejected the key (401)' });
+  const res = await scout.run({ config: { watchlist: ['A', 'B'], lookbackDays: 5 }, use });
+  assert.equal(res.warnings.length, 1);
+  assert.match(res.warnings[0], /401/);
+});
