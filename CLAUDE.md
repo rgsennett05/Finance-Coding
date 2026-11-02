@@ -35,6 +35,7 @@ by other people.
 - **Market data + broker:** Alpaca paper account.
   - The app talks to Alpaca through the official Python SDK (`alpaca-py`), via `data/broker.py`.
   - Price data uses Alpaca's free IEX feed (`DataFeed.IEX`); the paid SIP feed is not needed.
+    IEX volume is only one exchange's share of trading, so use volume as a ratio, never an absolute.
   - The official Alpaca MCP server is optional and only for chatting with Claude about the account;
     the app never depends on it.
 - **Models:** Claude Haiku or Sonnet for routine agents; Claude Opus for the Portfolio Manager.
@@ -87,7 +88,8 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 Start small: Market Analyst, Risk Manager, Portfolio Manager only.
 - [x] Project skeleton (folders, settings, tests, docs)
 - [x] Connect Alpaca paper account (with the paper-only safety check) — `python -m data.broker`
-- [ ] Market Analyst
+- [x] Market Analyst — `python -m agents.market_analyst` (AI explanations switch on once
+      `ANTHROPIC_API_KEY` is set; until then explanations are rule-based and labeled so)
 - [ ] Risk Manager
 - [ ] Portfolio Manager
 - [ ] Place paper trades and log every decision

@@ -29,6 +29,12 @@ python -m data.broker            # confirms your Alpaca paper account connects
 | `ALPACA_API_KEY`, `ALPACA_SECRET_KEY` | Market data and paper trades | [alpaca.markets](https://alpaca.markets) → switch to **Paper Trading** → API Keys. Paper keys start with `PK`. |
 | `ANTHROPIC_API_KEY` | The AI agents | [console.anthropic.com](https://console.anthropic.com) → API Keys |
 
+## Running the agents
+
+```bash
+python -m agents.market_analyst   # technical signals + plain-English read for each ticker
+```
+
 ## Settings
 Watchlist, risk limits and which Claude model each agent uses are in
 [`config/settings.toml`](config/settings.toml).
