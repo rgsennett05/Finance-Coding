@@ -1,0 +1,1103 @@
+{
+ "city": "Ticker City",
+ "startedAt": "2026-11-02T19:28:52.231Z",
+ "finishedAt": "2026-11-02T19:28:55.816Z",
+ "offline": false,
+ "tools": [
+  {
+   "name": "claude",
+   "description": "Writes an analyst memo from the numbers the other agents produced (needs ANTHROPIC_API_KEY).",
+   "source": "core"
+  },
+  {
+   "name": "dcf",
+   "description": "Two-stage DCF with growth fade, Gordon terminal value and a 3×3 sensitivity grid.",
+   "source": "core"
+  },
+  {
+   "name": "fundamentals",
+   "description": "Annual free cash flow, revenue, net income, cash, debt and share count from SEC XBRL filings.",
+   "source": "core"
+  },
+  {
+   "name": "indicators",
+   "description": "Built-in indicators plus MACD(12,26,9) and Bollinger(20,2) from technicalindicators.",
+   "source": "mod:technical-indicators"
+  },
+  {
+   "name": "prices",
+   "description": "Daily price history (Yahoo/Stooq) with the latest point replaced by a live Finnhub quote.",
+   "source": "mod:finnhub-live"
+  }
+ ],
+ "mods": [
+  {
+   "name": "technical-indicators",
+   "status": "loaded",
+   "description": "Adds MACD and Bollinger Bands via the technicalindicators npm package.",
+   "note": "replaced \"indicators\" with the library-backed version"
+  },
+  {
+   "name": "finnhub-live",
+   "status": "loaded",
+   "description": "Overlays real-time Finnhub quotes on the daily price history.",
+   "note": "live quotes layered on top of daily history"
+  }
+ ],
+ "agents": [
+  {
+   "id": "scout",
+   "name": "Market Scout",
+   "building": "Market Exchange",
+   "district": "Harbor",
+   "role": "Collects daily prices for the watchlist.",
+   "needs": [],
+   "tools": [
+    "prices"
+   ],
+   "status": "done",
+   "summary": "Priced 8 tickers",
+   "warnings": [],
+   "ms": 2015
+  },
+  {
+   "id": "quant",
+   "name": "Momentum Quant",
+   "building": "Quant Tower",
+   "district": "Analytics",
+   "role": "Scores trend and momentum (12-1 momentum, 3-month return, 200-day trend).",
+   "needs": [
+    "scout"
+   ],
+   "tools": [
+    "indicators"
+   ],
+   "status": "done",
+   "summary": "Momentum leader: XOM",
+   "warnings": [],
+   "ms": 20
+  },
+  {
+   "id": "valuation",
+   "name": "DCF Analyst",
+   "building": "Valuation Bank",
+   "district": "Financial",
+   "role": "Pulls 10-K cash flows from SEC XBRL and runs a DCF with sensitivity grid.",
+   "needs": [
+    "scout"
+   ],
+   "tools": [
+    "fundamentals",
+    "dcf"
+   ],
+   "status": "done",
+   "summary": "Valued 6/8 with a DCF",
+   "warnings": [
+    "2 tickers could not be valued"
+   ],
+   "ms": 1547
+  },
+  {
+   "id": "risk",
+   "name": "Risk Officer",
+   "building": "Risk Office",
+   "district": "Civic",
+   "role": "Penalizes high volatility and deep drawdowns; reports correlation to the basket.",
+   "needs": [
+    "scout",
+    "quant"
+   ],
+   "tools": [],
+   "status": "done",
+   "summary": "Highest risk: GOOGL",
+   "warnings": [],
+   "ms": 1
+  },
+  {
+   "id": "mayor",
+   "name": "Portfolio Mayor",
+   "building": "City Hall",
+   "district": "Downtown",
+   "role": "Weights momentum, value and risk into one score and names the picks.",
+   "needs": [
+    "quant",
+    "valuation",
+    "risk"
+   ],
+   "tools": [],
+   "status": "done",
+   "summary": "Picks: XOM, AAPL, KO",
+   "warnings": [],
+   "ms": 0
+  },
+  {
+   "id": "research",
+   "name": "Research Librarian",
+   "building": "Research Library",
+   "district": "Downtown",
+   "role": "Asks Claude to write a plain-English memo on the Mayor's picks.",
+   "needs": [
+    "mayor",
+    "quant",
+    "valuation",
+    "risk"
+   ],
+   "tools": [
+    "claude"
+   ],
+   "status": "closed",
+   "summary": "Library closed: ANTHROPIC_API_KEY not set",
+   "warnings": [],
+   "ms": 1
+  }
+ ],
+ "board": {
+  "quant": {
+   "AAPL": {
+    "last": 336.8500061035156,
+    "sma50": 333.59080078125,
+    "sma200": 296.66590614318847,
+    "rsi14": 46.416051024644915,
+    "ret1m": 0.009469878147351007,
+    "ret3m": 0.08972953772069747,
+    "ret6m": 0.21898342408424964,
+    "mom12_1": 0.24483440048944738,
+    "vol": 0.24230502809094623,
+    "maxDrawdown": -0.13798523953754416,
+    "macd": {
+     "line": 2.9060293938173913,
+     "signal": 3.789267102227517,
+     "histogram": -0.8832377084101255
+    },
+    "bollinger": {
+     "upper": 350.4001608986802,
+     "middle": 342.28150177001953,
+     "lower": 334.16284264135885,
+     "pctB": 0.1654930586179242
+    },
+    "aboveSma200": true,
+    "momentumScore": 0.8095238095238096
+   },
+   "MSFT": {
+    "last": 516.3900146484375,
+    "sma50": 513.5736016845703,
+    "sma200": 437.1669920349121,
+    "rsi14": 45.286041076438465,
+    "ret1m": -0.002202799033683811,
+    "ret3m": 0.04982064834617783,
+    "ret6m": 0.2535242402359441,
+    "mom12_1": 0.009202809224732933,
+    "vol": 0.32869961080879506,
+    "maxDrawdown": -0.31326120512632216,
+    "macd": {
+     "line": 3.4786297364138363,
+     "signal": 6.346401931026419,
+     "histogram": -2.8677721946125825
+    },
+    "bollinger": {
+     "upper": 543.7959627103767,
+     "middle": 530.54150390625,
+     "lower": 517.2870451021233,
+     "pctB": -0.03383881857954645
+    },
+    "aboveSma200": true,
+    "momentumScore": 0.5714285714285714
+   },
+   "NVDA": {
+    "last": 204.36500549316406,
+    "sma50": 221.48231658935546,
+    "sma200": 204.18092765808106,
+    "rsi14": 34.870555237152985,
+    "ret1m": -0.12645861013464066,
+    "ret3m": -0.0346622411783043,
+    "ret6m": 0.03200397290166679,
+    "mom12_1": 0.13355814516414033,
+    "vol": 0.37381010470859943,
+    "maxDrawdown": -0.20152676959283833,
+    "macd": {
+     "line": -4.26537882745356,
+     "signal": -2.582248269044841,
+     "histogram": -1.683130558408719
+    },
+    "bollinger": {
+     "upper": 238.47112630842713,
+     "middle": 219.7327522277832,
+     "lower": 200.9943781471393,
+     "pctB": 0.08993916258472272
+    },
+    "aboveSma200": true,
+    "momentumScore": 0.6190476190476191
+   },
+   "GOOGL": {
+    "last": 282.7099914550781,
+    "sma50": 337.79005249023436,
+    "sma200": 340.09535125732424,
+    "rsi14": 23.877380197038946,
+    "ret1m": -0.17697236839860808,
+    "ret3m": -0.2509156306607824,
+    "ret6m": -0.2614202580497126,
+    "mom12_1": 0.21384924675573402,
+    "vol": 0.33829041507917135,
+    "maxDrawdown": -0.30409039223532863,
+    "macd": {
+     "line": -14.076133861396102,
+     "signal": -7.619704920362501,
+     "histogram": -6.4564289410336
+    },
+    "bollinger": {
+     "upper": 377.69362784681186,
+     "middle": 330.7184997558594,
+     "lower": 283.74337166490693,
+     "pctB": -0.010999227163659803
+    },
+    "aboveSma200": false,
+    "momentumScore": 0.19047619047619047
+   },
+   "AMZN": {
+    "last": 248.6345977783203,
+    "sma50": 254.0790921020508,
+    "sma200": 243.45287300109862,
+    "rsi14": 46.61455233079273,
+    "ret1m": -0.011471876769749811,
+    "ret3m": -0.1037611356648298,
+    "ret6m": -0.08607017484032253,
+    "mom12_1": -0.009763762706846757,
+    "vol": 0.33555276223648434,
+    "maxDrawdown": -0.2173622311569574,
+    "macd": {
+     "line": -2.0288005544639134,
+     "signal": -0.7943421277592473,
+     "histogram": -1.234458426704666
+    },
+    "bollinger": {
+     "upper": 266.8053255861504,
+     "middle": 254.25223083496093,
+     "lower": 241.69913608377146,
+     "pctB": 0.2762450946166754
+    },
+    "aboveSma200": true,
+    "momentumScore": 0.38095238095238093
+   },
+   "JPM": {
+    "last": 341.43499755859375,
+    "sma50": 342.04625122070314,
+    "sma200": 320.4856190490723,
+    "rsi14": 54.69965487448643,
+    "ret1m": 0.03236775078360865,
+    "ret3m": -0.04022601241016277,
+    "ret6m": 0.1203777992566426,
+    "mom12_1": 0.08970342492523309,
+    "vol": 0.2217186980214425,
+    "maxDrawdown": -0.1547173565405373,
+    "macd": {
+     "line": -0.11246752567785734,
+     "signal": -1.397318882826736,
+     "histogram": 1.2848513571488787
+    },
+    "bollinger": {
+     "upper": 342.31662588244063,
+     "middle": 335.2407485961914,
+     "lower": 328.16487130994216,
+     "pctB": 0.9377018362401383
+    },
+    "aboveSma200": true,
+    "momentumScore": 0.5238095238095238
+   },
+   "KO": {
+    "last": 96.00499725341797,
+    "sma50": 89.4040510559082,
+    "sma200": 81.51763111114502,
+    "rsi14": 67.64057948354494,
+    "ret1m": 0.1208989555523865,
+    "ret3m": 0.11573329403660648,
+    "ret6m": 0.24314372862100053,
+    "mom12_1": 0.2936135138579592,
+    "vol": 0.1899844302843565,
+    "maxDrawdown": -0.07867643728225071,
+    "macd": {
+     "line": 1.5612616264947974,
+     "signal": 1.3719082093967525,
+     "histogram": 0.18935341709804487
+    },
+    "bollinger": {
+     "upper": 97.10625733602649,
+     "middle": 91.57724952697754,
+     "lower": 86.04824171792859,
+     "pctB": 0.9004106956761607
+    },
+    "aboveSma200": true,
+    "momentumScore": 0.9047619047619048
+   },
+   "XOM": {
+    "last": 180.30999755859375,
+    "sma50": 168.0656002807617,
+    "sma200": 153.65800689697267,
+    "rsi14": 58.16157174974449,
+    "ret1m": 0.09938420582703222,
+    "ret3m": 0.17873159228768842,
+    "ret6m": 0.18881713922217602,
+    "mom12_1": 0.48350418921837823,
+    "vol": 0.2662234091148159,
+    "maxDrawdown": -0.20112264413803926,
+    "macd": {
+     "line": 4.883074727202484,
+     "signal": 4.714601168460992,
+     "histogram": 0.16847355874149184
+    },
+    "bollinger": {
+     "upper": 189.3779672120306,
+     "middle": 176.79299850463866,
+     "lower": 164.20802979724672,
+     "pctB": 0.6397301469605299
+    },
+    "aboveSma200": true,
+    "momentumScore": 1
+   }
+  },
+  "valuation": {
+   "AAPL": {
+    "entityName": "Apple Inc.",
+    "ok": true,
+    "assumptions": {
+     "projectionYears": 5,
+     "discountRate": 0.09,
+     "terminalGrowth": 0.025,
+     "maxGrowth": 0.2,
+     "minGrowth": -0.05,
+     "normalizedFcf": 102386000000,
+     "historicalFcfCagr": 0.06124091867952197,
+     "startingGrowth": 0.06124091867952197
+    },
+    "intrinsicPerShare": 116.36391857216226,
+    "price": 336.8500061035156,
+    "marginOfSafety": -0.6545527194189718,
+    "terminalShareOfValue": 0.7390096659957867,
+    "projection": [
+     {
+      "year": 1,
+      "growth": 0.06124091867952197,
+      "fcf": 108656212699.92154,
+      "pv": 99684598807.26746
+     },
+     {
+      "year": 2,
+      "growth": 0.05218068900964148,
+      "fcf": 114325968743.7816,
+      "pv": 96225880602.45905
+     },
+     {
+      "year": 3,
+      "growth": 0.04312045933976098,
+      "fcf": 119255757030.47661,
+      "pv": 92087325481.11012
+     },
+     {
+      "year": 4,
+      "growth": 0.034060229669880496,
+      "fcf": 123317635504.3901,
+      "pv": 87361321960.25851
+     },
+     {
+      "year": 5,
+      "growth": 0.025,
+      "fcf": 126400576391.99985,
+      "pv": 82151701843.36235
+     }
+    ],
+    "sensitivity": [
+     {
+      "r": 0.08,
+      "gT": 0.02,
+      "perShare": 127.30501091333878
+     },
+     {
+      "r": 0.08,
+      "gT": 0.025,
+      "perShare": 138.30382045295443
+     },
+     {
+      "r": 0.08,
+      "gT": 0.03,
+      "perShare": 151.50043807012514
+     },
+     {
+      "r": 0.09,
+      "gT": 0.02,
+      "perShare": 108.49271163465474
+     },
+     {
+      "r": 0.09,
+      "gT": 0.025,
+      "perShare": 116.36391857216226
+     },
+     {
+      "r": 0.09,
+      "gT": 0.03,
+      "perShare": 125.54540355478578
+     },
+     {
+      "r": 0.1,
+      "gT": 0.02,
+      "perShare": 94.38560770551597
+     },
+     {
+      "r": 0.1,
+      "gT": 0.025,
+      "perShare": 100.27664857559641
+     },
+     {
+      "r": 0.1,
+      "gT": 0.03,
+      "perShare": 107.00793587860542
+     }
+    ],
+    "valueScore": 0.8
+   },
+   "MSFT": {
+    "entityName": "MICROSOFT CORP",
+    "ok": true,
+    "assumptions": {
+     "projectionYears": 5,
+     "discountRate": 0.09,
+     "terminalGrowth": 0.025,
+     "maxGrowth": 0.2,
+     "minGrowth": -0.05,
+     "normalizedFcf": 70889666666.66667,
+     "historicalFcfCagr": 0.03604775529019322,
+     "startingGrowth": 0.03604775529019322
+    },
+    "intrinsicPerShare": 151.78014863582408,
+    "price": 516.3900146484375,
+    "marginOfSafety": -0.706074586397343,
+    "terminalShareOfValue": 0.7364759914753621,
+    "projection": [
+     {
+      "year": 1,
+      "growth": 0.03604775529019322,
+      "fcf": 73445080023.27003,
+      "pv": 67380807360.798195
+     },
+     {
+      "year": 2,
+      "growth": 0.03328581646764491,
+      "fcf": 75889759477.37608,
+      "pv": 63874892245.918755
+     },
+     {
+      "year": 3,
+      "growth": 0.03052387764509661,
+      "fcf": 78206209210.17932,
+      "pv": 60389542790.299904
+     },
+     {
+      "year": 4,
+      "growth": 0.027761938822548307,
+      "fcf": 80377365205.81573,
+      "pv": 56941351910.79438
+     },
+     {
+      "year": 5,
+      "growth": 0.025,
+      "fcf": 82386799335.96112,
+      "pv": 53545766705.1048
+     }
+    ],
+    "sensitivity": [
+     {
+      "r": 0.08,
+      "gT": 0.02,
+      "perShare": 165.7906714716258
+     },
+     {
+      "r": 0.08,
+      "gT": 0.025,
+      "perShare": 179.89068960019276
+     },
+     {
+      "r": 0.08,
+      "gT": 0.03,
+      "perShare": 196.80813447307605
+     },
+     {
+      "r": 0.09,
+      "gT": 0.02,
+      "perShare": 141.68809735901937
+     },
+     {
+      "r": 0.09,
+      "gT": 0.025,
+      "perShare": 151.78014863582408
+     },
+     {
+      "r": 0.09,
+      "gT": 0.03,
+      "perShare": 163.5521116647136
+     },
+     {
+      "r": 0.1,
+      "gT": 0.02,
+      "perShare": 123.61224227382336
+     },
+     {
+      "r": 0.1,
+      "gT": 0.025,
+      "perShare": 131.16654318099816
+     },
+     {
+      "r": 0.1,
+      "gT": 0.03,
+      "perShare": 139.7982746173487
+     }
+    ],
+    "valueScore": 0.6
+   },
+   "NVDA": {
+    "entityName": "NVIDIA CORP",
+    "ok": true,
+    "assumptions": {
+     "projectionYears": 5,
+     "discountRate": 0.09,
+     "terminalGrowth": 0.025,
+     "maxGrowth": 0.2,
+     "minGrowth": -0.05,
+     "normalizedFcf": 61516666666.666664,
+     "historicalFcfCagr": 0.41254403837632525,
+     "startingGrowth": 0.2
+    },
+    "intrinsicPerShare": 58.94784612912251,
+    "price": 204.36500549316406,
+    "marginOfSafety": -0.7115560661333757,
+    "terminalShareOfValue": 0.7515754979118617,
+    "projection": [
+     {
+      "year": 1,
+      "growth": 0.2,
+      "fcf": 73820000000,
+      "pv": 67724770642.20183
+     },
+     {
+      "year": 2,
+      "growth": 0.15625,
+      "fcf": 85354375000,
+      "pv": 71841069775.27144
+     },
+     {
+      "year": 3,
+      "growth": 0.1125,
+      "fcf": 94956742187.5,
+      "pv": 73324027637.605
+     },
+     {
+      "year": 4,
+      "growth": 0.06875,
+      "fcf": 101485018212.89064,
+      "pv": 71894545447.42235
+     },
+     {
+      "year": 5,
+      "growth": 0.024999999999999994,
+      "fcf": 104022143668.21289,
+      "pv": 67607256040.00723
+     }
+    ],
+    "sensitivity": [
+     {
+      "r": 0.08,
+      "gT": 0.02,
+      "perShare": 64.40898461023455
+     },
+     {
+      "r": 0.08,
+      "gT": 0.025,
+      "perShare": 69.86768776605511
+     },
+     {
+      "r": 0.08,
+      "gT": 0.03,
+      "perShare": 76.41729608279492
+     },
+     {
+      "r": 0.09,
+      "gT": 0.02,
+      "perShare": 55.044308079465644
+     },
+     {
+      "r": 0.09,
+      "gT": 0.025,
+      "perShare": 58.94784612912251
+     },
+     {
+      "r": 0.09,
+      "gT": 0.03,
+      "perShare": 63.50129415161303
+     },
+     {
+      "r": 0.1,
+      "gT": 0.02,
+      "perShare": 48.02501416703817
+     },
+     {
+      "r": 0.1,
+      "gT": 0.025,
+      "perShare": 50.94433966472575
+     },
+     {
+      "r": 0.1,
+      "gT": 0.03,
+      "perShare": 54.28014275064721
+     }
+    ],
+    "valueScore": 0.4
+   },
+   "GOOGL": {
+    "entityName": "Alphabet Inc.",
+    "ok": true,
+    "assumptions": {
+     "projectionYears": 5,
+     "discountRate": 0.09,
+     "terminalGrowth": 0.025,
+     "maxGrowth": 0.2,
+     "minGrowth": -0.05,
+     "normalizedFcf": 71841666666.66667,
+     "historicalFcfCagr": 0.11329664997970323,
+     "startingGrowth": 0.11329664997970323
+    },
+    "intrinsicPerShare": 110.72248543703952,
+    "price": 282.7099914550781,
+    "marginOfSafety": -0.608353122338681,
+    "terminalShareOfValue": 0.7439863211333446,
+    "projection": [
+     {
+      "year": 1,
+      "growth": 0.11329664997970323,
+      "fcf": 79981086828.95851,
+      "pv": 73377143879.77844
+     },
+     {
+      "year": 2,
+      "growth": 0.09122248748477743,
+      "fcf": 87277160521.23207,
+      "pv": 73459439879.83508
+     },
+     {
+      "year": 3,
+      "growth": 0.06914832498985161,
+      "fcf": 93312229981.14568,
+      "pv": 72054162479.09943
+     },
+     {
+      "year": 4,
+      "growth": 0.0470741624949258,
+      "fcf": 97704825058.042,
+      "pv": 69216561313.8315
+     },
+     {
+      "year": 5,
+      "growth": 0.024999999999999994,
+      "fcf": 100147445684.49304,
+      "pv": 65088968207.96079
+     }
+    ],
+    "sensitivity": [
+     {
+      "r": 0.08,
+      "gT": 0.02,
+      "perShare": 121.01920717779288
+     },
+     {
+      "r": 0.08,
+      "gT": 0.025,
+      "perShare": 131.34734701938171
+     },
+     {
+      "r": 0.08,
+      "gT": 0.03,
+      "perShare": 143.73938234045423
+     },
+     {
+      "r": 0.09,
+      "gT": 0.02,
+      "perShare": 103.3334090441775
+     },
+     {
+      "r": 0.09,
+      "gT": 0.025,
+      "perShare": 110.72248543703952
+     },
+     {
+      "r": 0.09,
+      "gT": 0.03,
+      "perShare": 119.34166496098591
+     },
+     {
+      "r": 0.1,
+      "gT": 0.02,
+      "perShare": 90.07341730312126
+     },
+     {
+      "r": 0.1,
+      "gT": 0.025,
+      "perShare": 95.60199329985562
+     },
+     {
+      "r": 0.1,
+      "gT": 0.03,
+      "perShare": 101.91918592699903
+     }
+    ],
+    "valueScore": 1
+   },
+   "AMZN": {
+    "entityName": "AMAZON.COM, INC.",
+    "ok": true,
+    "assumptions": {
+     "projectionYears": 5,
+     "discountRate": 0.09,
+     "terminalGrowth": 0.025,
+     "maxGrowth": 0.2,
+     "minGrowth": -0.05,
+     "normalizedFcf": 24263333333.333332,
+     "historicalFcfCagr": -0.21569157840527187,
+     "startingGrowth": -0.05
+    },
+    "intrinsicPerShare": 31.30793076207028,
+    "price": 248.6345977783203,
+    "marginOfSafety": -0.8740805541874583,
+    "terminalShareOfValue": 0.7271387571459808,
+    "projection": [
+     {
+      "year": 1,
+      "growth": -0.05,
+      "fcf": 23050166666.666664,
+      "pv": 21146941896.02446
+     },
+     {
+      "year": 2,
+      "growth": -0.03125,
+      "fcf": 22329848958.333332,
+      "pv": 18794587120.8933
+     },
+     {
+      "year": 3,
+      "growth": -0.012499999999999997,
+      "fcf": 22050725846.354168,
+      "pv": 17027206221.910213
+     },
+     {
+      "year": 4,
+      "growth": 0.0062500000000000056,
+      "fcf": 22188542882.893883,
+      "pv": 15718923175.043259
+     },
+     {
+      "year": 5,
+      "growth": 0.02500000000000001,
+      "fcf": 22743256454.96623,
+      "pv": 14781556196.714989
+     }
+    ],
+    "sensitivity": [
+     {
+      "r": 0.08,
+      "gT": 0.02,
+      "perShare": 33.96141414580614
+     },
+     {
+      "r": 0.08,
+      "gT": 0.025,
+      "perShare": 36.642439421301845
+     },
+     {
+      "r": 0.08,
+      "gT": 0.03,
+      "perShare": 39.8591279842952
+     },
+     {
+      "r": 0.09,
+      "gT": 0.02,
+      "perShare": 29.387969126265027
+     },
+     {
+      "r": 0.09,
+      "gT": 0.025,
+      "perShare": 31.30793076207028
+     },
+     {
+      "r": 0.09,
+      "gT": 0.03,
+      "perShare": 33.54744512841953
+     },
+     {
+      "r": 0.1,
+      "gT": 0.02,
+      "perShare": 25.95693906287086
+     },
+     {
+      "r": 0.1,
+      "gT": 0.025,
+      "perShare": 27.394874175964755
+     },
+     {
+      "r": 0.1,
+      "gT": 0.03,
+      "perShare": 29.037859480511415
+     }
+    ],
+    "valueScore": 0
+   },
+   "JPM": {
+    "entityName": "JPMORGAN CHASE & CO",
+    "ok": false,
+    "reason": "no year with both operating cash flow and capex reported",
+    "valueScore": null
+   },
+   "KO": {
+    "entityName": "COCA COLA CO",
+    "ok": true,
+    "assumptions": {
+     "projectionYears": 5,
+     "discountRate": 0.09,
+     "terminalGrowth": 0.025,
+     "maxGrowth": 0.2,
+     "minGrowth": -0.05,
+     "normalizedFcf": 6594666666.666667,
+     "historicalFcfCagr": -0.09382937785430312,
+     "startingGrowth": -0.05
+    },
+    "intrinsicPerShare": 13.921887737028136,
+    "price": 96.00499725341797,
+    "marginOfSafety": -0.8549878846381355,
+    "terminalShareOfValue": 0.7271387571459808,
+    "projection": [
+     {
+      "year": 1,
+      "growth": -0.05,
+      "fcf": 6264933333.333333,
+      "pv": 5747645259.938837
+     },
+     {
+      "year": 2,
+      "growth": -0.03125,
+      "fcf": 6069154166.666666,
+      "pv": 5108285638.133714
+     },
+     {
+      "year": 3,
+      "growth": -0.012499999999999997,
+      "fcf": 5993289739.583333,
+      "pv": 4627919328.125726
+     },
+     {
+      "year": 4,
+      "growth": 0.0062500000000000056,
+      "fcf": 6030747800.4557295,
+      "pv": 4272333783.4188185
+     },
+     {
+      "year": 5,
+      "growth": 0.02500000000000001,
+      "fcf": 6181516495.467122,
+      "pv": 4017561585.325035
+     }
+    ],
+    "sensitivity": [
+     {
+      "r": 0.08,
+      "gT": 0.02,
+      "perShare": 15.734688051160928
+     },
+     {
+      "r": 0.08,
+      "gT": 0.025,
+      "perShare": 17.566304367813302
+     },
+     {
+      "r": 0.08,
+      "gT": 0.03,
+      "perShare": 19.76387382432594
+     },
+     {
+      "r": 0.09,
+      "gT": 0.02,
+      "perShare": 12.610213023764842
+     },
+     {
+      "r": 0.09,
+      "gT": 0.025,
+      "perShare": 13.921887737028136
+     },
+     {
+      "r": 0.09,
+      "gT": 0.03,
+      "perShare": 15.451873706304127
+     },
+     {
+      "r": 0.1,
+      "gT": 0.02,
+      "perShare": 10.266210263150926
+     },
+     {
+      "r": 0.1,
+      "gT": 0.025,
+      "perShare": 11.248575270859856
+     },
+     {
+      "r": 0.1,
+      "gT": 0.03,
+      "perShare": 12.371025968856854
+     }
+    ],
+    "valueScore": 0.2
+   },
+   "XOM": {
+    "entityName": "ExxonMobil Holdings Corporation",
+    "ok": false,
+    "reason": "no annual 10-K cash flows under this SEC filer (new filer ID, or a bank/insurer that doesn't report capex)",
+    "valueScore": null
+   }
+  },
+  "risk": {
+   "AAPL": {
+    "vol": 0.24230502809094623,
+    "maxDrawdown": -0.13798523953754416,
+    "corrToBasket": 0.38149938748597617,
+    "riskScore": 0.7857142857142858
+   },
+   "MSFT": {
+    "vol": 0.32869961080879506,
+    "maxDrawdown": -0.31326120512632216,
+    "corrToBasket": 0.5902510020476178,
+    "riskScore": 0.2142857142857143
+   },
+   "NVDA": {
+    "vol": 0.37381010470859943,
+    "maxDrawdown": -0.20152676959283833,
+    "corrToBasket": 0.5440315173272059,
+    "riskScore": 0.2142857142857143
+   },
+   "GOOGL": {
+    "vol": 0.33829041507917135,
+    "maxDrawdown": -0.30409039223532863,
+    "corrToBasket": 0.6328498486295306,
+    "riskScore": 0.1428571428571429
+   },
+   "AMZN": {
+    "vol": 0.33555276223648434,
+    "maxDrawdown": -0.2173622311569574,
+    "corrToBasket": 0.7077989235238317,
+    "riskScore": 0.2857142857142857
+   },
+   "JPM": {
+    "vol": 0.2217186980214425,
+    "maxDrawdown": -0.1547173565405373,
+    "corrToBasket": 0.37854741694120303,
+    "riskScore": 0.7857142857142858
+   },
+   "KO": {
+    "vol": 0.1899844302843565,
+    "maxDrawdown": -0.07867643728225071,
+    "corrToBasket": 0.04120483286780878,
+    "riskScore": 1
+   },
+   "XOM": {
+    "vol": 0.2662234091148159,
+    "maxDrawdown": -0.20112264413803926,
+    "corrToBasket": -0.08917993246595769,
+    "riskScore": 0.5714285714285714
+   }
+  },
+  "mayor": {
+   "ranked": [
+    {
+     "ticker": "XOM",
+     "score": 0.8214285714285714,
+     "parts": {
+      "momentum": 1,
+      "value": null,
+      "risk": 0.5714285714285714
+     },
+     "missing": [
+      "value"
+     ]
+    },
+    {
+     "ticker": "AAPL",
+     "score": 0.7997619047619049,
+     "parts": {
+      "momentum": 0.8095238095238096,
+      "value": 0.8,
+      "risk": 0.7857142857142858
+     },
+     "missing": []
+    },
+    {
+     "ticker": "KO",
+     "score": 0.6466666666666667,
+     "parts": {
+      "momentum": 0.9047619047619048,
+      "value": 0.2,
+      "risk": 1
+     },
+     "missing": []
+    },
+    {
+     "ticker": "JPM",
+     "score": 0.6329365079365079,
+     "parts": {
+      "momentum": 0.5238095238095238,
+      "value": null,
+      "risk": 0.7857142857142858
+     },
+     "missing": [
+      "value"
+     ]
+    },
+    {
+     "ticker": "GOOGL",
+     "score": 0.5023809523809524,
+     "parts": {
+      "momentum": 0.19047619047619047,
+      "value": 1,
+      "risk": 0.1428571428571429
+     },
+     "missing": []
+    },
+    {
+     "ticker": "MSFT",
+     "score": 0.49357142857142855,
+     "parts": {
+      "momentum": 0.5714285714285714,
+      "value": 0.6,
+      "risk": 0.2142857142857143
+     },
+     "missing": []
+    },
+    {
+     "ticker": "NVDA",
+     "score": 0.4302380952380953,
+     "parts": {
+      "momentum": 0.6190476190476191,
+      "value": 0.4,
+      "risk": 0.2142857142857143
+     },
+     "missing": []
+    },
+    {
+     "ticker": "AMZN",
+     "score": 0.20476190476190473,
+     "parts": {
+      "momentum": 0.38095238095238093,
+      "value": 0,
+      "risk": 0.2857142857142857
+     },
+     "missing": []
+    }
+   ],
+   "picks": [
+    "XOM",
+    "AAPL",
+    "KO"
+   ]
+  }
+ }
+}
