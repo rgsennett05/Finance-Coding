@@ -117,11 +117,43 @@ def stocks(run: dict | None, live: dict | None, tickers: list[str], benchmark: s
     return out
 
 
+def trades(live: dict | None) -> list[dict]:
+    """Recent orders, newest first, for the light trails between the Risk Fortress and the towers."""
+    if live is None or live["orders"].empty:
+        return []
+    out = []
+    for r in live["orders"].to_dict("records"):
+        submitted = pd.to_datetime(r.get("Submitted"), utc=True, errors="coerce")
+        out.append({
+            "ticker": r["Stock"], "side": str(r.get("Side", "")).lower(), "shares": int(r.get("Shares") or 0),
+            "status": str(r.get("Status", "")).lower(),
+            "submitted": None if pd.isna(submitted) else submitted.isoformat(),
+            "fill_price": _num(r.get("Fill price")),
+        })
+    return out
+
+
+def activity(run: dict | None, live: dict | None, now: pd.Timestamp | None = None) -> dict:
+    """How busy the fund is: drives traffic, crowds and lit windows in the city (0 = quiet, 1 = busy)."""
+    now = now or pd.Timestamp.now(tz="UTC")
+    recent = [t for t in trades(live) if t["submitted"] and now - pd.Timestamp(t["submitted"]) < pd.Timedelta(hours=24)]
+    market_open = bool(getattr((live or {}).get("clock"), "is_open", False))
+    ran_recently = False
+    if run and run.get("run_at"):
+        at = pd.Timestamp(run["run_at"])
+        at = at.tz_localize("UTC") if at.tzinfo is None else at
+        ran_recently = now - at < pd.Timedelta(hours=24)
+    level = 0.15 + 0.35 * market_open + 0.1 * min(len(recent), 4) + 0.1 * bool(ran_recently)
+    return {"level": round(min(level, 1.0), 2), "orders_24h": len(recent), "market_open": market_open}
+
+
 def city_state(run: dict | None, live: dict | None, tickers: list[str], benchmark: str) -> dict:
     details = agent_details(run)
     ran = bool(run)
     acct = (live or {}).get("account", {})
     return {
+        "trades": trades(live),
+        "activity": activity(run, live),
         "run": {"at": run.get("run_at") if run else None, "mode": run.get("mode") if run else None},
         "market_open": bool(getattr((live or {}).get("clock"), "is_open", False)),
         "account": {k: _num(v) for k, v in acct.items()},

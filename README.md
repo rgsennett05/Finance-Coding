@@ -63,9 +63,11 @@ Then open the address it prints (usually http://localhost:8501). Two pages:
 
 - **Overview** — portfolio value vs. VOO, open positions, recent orders, and what each agent decided
   in the latest run.
-- **City** — a 3D city: each agent is a building, each stock a tower. Press **▶ Replay latest run**
-  to watch signals, decisions and orders travel between buildings; drag to rotate, scroll to zoom,
-  click a building for its reasoning. Needs an internet connection (it loads Three.js).
+- **City** — a 3D city: each agent is a building, each stock a tower, surrounded by a living city
+  whose sky follows New York time and whose streets get busier when the fund is. Press **▶ Replay
+  latest run** to watch signals, decisions and orders travel between buildings; past orders show as
+  fading light trails. Drag to rotate, scroll to zoom, click a building for its reasoning. Needs an
+  internet connection (it loads Three.js and two Google fonts).
 
 Press **Refresh** to reload from Alpaca.
 

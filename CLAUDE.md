@@ -125,6 +125,12 @@ them.
       Agents = buildings on Agent Row; stocks = towers in the Market District (height = value,
       crown = gain/loss, scaffolding = waiting order); VOO = monument; Stage 3 agents = dashed lots.
       "Replay latest run" animates the run log as pulses between buildings.
+- [x] 3D city, realistic version (2026-11-03): physically based sky with the sun on New York time
+      (New York time / fast day-night / pick a time), stars, lit windows, street lights and car
+      lights at night; a merged skyline of procedural towers around the fund's district (Exchange
+      Park keeps the view open); instanced trees, cars and pedestrians whose numbers follow the
+      fund's activity level; fading trade-trail arcs for past orders; live mode (auto-replay of a
+      new run; dashboard re-checks every 2 minutes); optional sound (off by default).
 **Done when:** the city runs live alongside a real paper-trading run.
 
 ### Stage 4 — Polish and share

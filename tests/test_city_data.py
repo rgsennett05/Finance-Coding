@@ -3,7 +3,7 @@ import json
 
 import pandas as pd
 
-from dashboard.city_data import city_state, flows, render
+from dashboard.city_data import activity, city_state, flows, render, trades
 
 RUN = {
     "run_at": "2026-11-02T23:27:21", "mode": "paper",
@@ -57,3 +57,15 @@ def test_render_embeds_state_safely():
     assert "</script><b>" not in html
     start = html.index("const CITY = ") + len("const CITY = ")
     assert json.loads(html[start:html.index(";\n", start)])["run"]["mode"] == "paper"
+
+
+def test_trades_and_activity():
+    live = dict(LIVE, orders=pd.DataFrame([
+        {"Submitted": pd.Timestamp("2026-11-02T23:27:21Z"), "Stock": "AAA", "Side": "BUY", "Shares": 5,
+         "Status": "accepted", "Fill price": float("nan"), "Stop-loss": 9.2},
+    ]))
+    t = trades(live)
+    assert t[0]["ticker"] == "AAA" and t[0]["side"] == "buy" and t[0]["fill_price"] is None
+    busy = activity(RUN, live, now=pd.Timestamp("2026-11-03T01:00:00Z"))
+    quiet = activity(None, None, now=pd.Timestamp("2026-11-10T01:00:00Z"))
+    assert busy["orders_24h"] == 1 and busy["level"] > quiet["level"]
