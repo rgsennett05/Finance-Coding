@@ -82,6 +82,21 @@ Enforced by plain code (`agents/risk_manager.py`, `trading/stops.py`), never by 
 - No re-buying a stock for 7 days after its stop-loss sells it
 - Whole shares only, no short selling, no borrowed money
 
+## Backtest
+
+```bash
+python -m backtest.run                      # replay the current rules from Nov 2021 to today
+python -m backtest.run --start 2023-01-01   # a different period
+```
+
+It uses the same agent code as the live fund, decides after each day's close and fills at the next
+day's open, so it never peeks at the future. It compares the fund with holding VOO, and with VOO held
+at the same share invested as the fund (the fair comparison when the fund holds a lot of cash).
+Results are saved to `logs/backtest_latest.json`.
+
+Read the results with care: the watchlist was picked today, so stocks that later did well (like NVDA)
+make the past look better than it would have felt at the time.
+
 ## Settings
 Watchlist, risk limits and which Claude model each agent uses are in
 [`config/settings.toml`](config/settings.toml).

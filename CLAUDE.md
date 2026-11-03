@@ -84,6 +84,7 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 ├── prompts/         # instruction text for each agent
 ├── data/            # market data helpers (Alpaca)
 ├── trading/         # order placement (paper only)
+├── backtest/        # replays the real rules on past prices: python -m backtest.run
 ├── logs/            # decision + trade logs (Auditor writes here; not uploaded to GitHub)
 ├── dashboard/       # Streamlit app: app.py (navigation), overview.py, city_page.py + city.html
 ├── .streamlit/      # Streamlit settings (no usage tracking, minimal toolbar)
@@ -111,6 +112,16 @@ Start small: Market Analyst, Risk Manager, Portfolio Manager only.
 Risk rules tightened on 2026-11-03 (owner's request, no new features): stops at the real fill price,
 trimming, re-buy cool-down, and waiting buys counted against cash. The daily loop is now
 analyze → decide → trim → risk review → orders → stop-loss check → log.
+
+**Backtest (2026-11-03)** — `python -m backtest.run` replays the live rules (same agent functions) on
+split/dividend-adjusted IEX daily bars: decide after the close, fill at the next open (+0.05%
+slippage), stops filled at the stop or a gap-down open, cool-down applied. Results save to
+`logs/backtest_latest.json`. First result, Nov 2021 → Nov 2026, $100k:
+fund +66% (worst drop −9%, Sharpe 1.38) vs. hold VOO +75% (worst −24%, Sharpe 0.75) vs. VOO at the
+fund's own invested share +28%. Findings: only ~46% invested on average (6 tradable stocks × 10% cap);
+about half the return came from NVDA (hindsight: the watchlist was picked in 2026) — without NVDA
++35% vs. +22%; trimming cut return (+125% without it) but halved the worst drop; stop-losses barely
+mattered (+71% without). Known limits: hindsight watchlist, cash earns 0%, no taxes, IEX prices.
 
 ### Stage 2 — Dashboard ← current stage
 Streamlit app showing: portfolio value over time vs. VOO, open positions, recent trades, and each
