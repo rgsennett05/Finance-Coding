@@ -43,7 +43,7 @@ def agent_details(run: dict | None) -> dict[str, list[str]]:
     risk = run.get("risk_review", [])
     funds = run.get("fundamentals")
     out = {
-        "fundamentals": (["Advisory: reported, not yet used in decisions."] +
+        "fundamentals": (["Counts for 40% of the Portfolio Manager's blended score."] +
                          [f"{f['ticker']}: {f['label']} (score {f['score']:+.2f}) — {f['explanation']}" if f["available"] and f.get("score") is not None
                           else f"{f['ticker']}: {f['reason']}" for f in funds]) if funds is not None else ["Didn't run in this run."],
         "market_analyst": [f"{s['ticker']}: {s['label']} (score {s['score']:+.2f}) — {s.get('explanation', '')}" for s in signals],
@@ -76,7 +76,7 @@ def flows(run: dict | None) -> list[dict]:
     funds = [f for f in run.get("fundamentals") or [] if f.get("available")]
     if funds:
         steps.append({"from": "fundamentals", "to": "portfolio_manager", "kind": "fundamentals",
-                      "label": f"Fundamentals on {len(funds)} companies (advisory)"})
+                      "label": f"Fundamentals on {len(funds)} companies"})
     if proposals:
         steps.append({"from": "portfolio_manager", "to": "risk_manager", "kind": "proposal",
                       "label": f"{len(proposals)} proposed trade(s)"})

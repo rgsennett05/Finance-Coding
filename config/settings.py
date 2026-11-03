@@ -26,6 +26,10 @@ class Settings:
     routine_model: str
     portfolio_manager_model: str
     portfolio_manager_mode: str = "rules"
+    market_weight: float = 0.6
+    fundamentals_weight: float = 0.4
+    buy_above: float = 0.33
+    sell_below: float = -0.33
 
 
 def load_settings(path: Path = SETTINGS_PATH) -> Settings:
@@ -47,7 +51,14 @@ def load_settings(path: Path = SETTINGS_PATH) -> Settings:
     if not tickers:
         raise ValueError("watchlist.tickers is empty")
 
-    pm_mode = raw.get("portfolio_manager", {}).get("mode", "rules")
+    pm = raw.get("portfolio_manager", {})
+    pm_mode = pm.get("mode", "rules")
+    mw, fw = float(pm.get("market_weight", 0.6)), float(pm.get("fundamentals_weight", 0.4))
+    if mw < 0 or fw < 0 or mw + fw <= 0:
+        raise ValueError("portfolio_manager weights must be zero or positive and not both zero")
+    buy_above, sell_below = float(pm.get("buy_above", 0.33)), float(pm.get("sell_below", -0.33))
+    if not -1 <= sell_below < buy_above <= 1:
+        raise ValueError("portfolio_manager: need -1 <= sell_below < buy_above <= 1")
     if pm_mode not in ("rules", "ai"):
         raise ValueError(f'portfolio_manager.mode must be "rules" or "ai", got "{pm_mode}"')
 
@@ -58,4 +69,8 @@ def load_settings(path: Path = SETTINGS_PATH) -> Settings:
         routine_model=raw["models"]["routine"],
         portfolio_manager_model=raw["models"]["portfolio_manager"],
         portfolio_manager_mode=pm_mode,
+        market_weight=mw,
+        fundamentals_weight=fw,
+        buy_above=buy_above,
+        sell_below=sell_below,
     )

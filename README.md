@@ -44,6 +44,7 @@ Each agent can also be run on its own:
 ```bash
 python -m agents.market_analyst   # technical signals + plain-English read for each ticker
 python -m agents.fundamentals_analyst  # valuation, growth, profitability and debt from SEC filings
+# The Portfolio Manager blends both analysts: 60% market + 40% fundamentals (config/settings.toml)
 python -m agents.risk_manager     # dry run: what the risk limits would allow (no orders placed)
 python -m agents.portfolio_manager  # dry run: buy/sell/hold decisions + risk review (no orders placed)
 ```

@@ -17,6 +17,13 @@ cooldown_days = 7         # after a stop-loss sells a stock, don't buy it again 
 [portfolio_manager]
 # "rules" = free, rule-based decisions. "ai" = Claude Opus decides (not built yet; needs ANTHROPIC_API_KEY).
 mode = "rules"
+# Rules mode blends the two analysts into one score from -1 to +1:
+#   blended = market_weight × Market Analyst score + fundamentals_weight × Fundamentals Analyst score
+# (a stock with no fundamentals uses the market score alone).
+market_weight = 0.6
+fundamentals_weight = 0.4
+buy_above = 0.33          # buy a stock we don't own when its blended score is above this
+sell_below = -0.33        # sell a stock we own when its blended score falls below this
 
 [models]
 # Routine agents use a cheaper model; the Portfolio Manager makes final calls.

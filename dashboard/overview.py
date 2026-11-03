@@ -175,7 +175,7 @@ def page():
                     st.markdown(f"**{s['ticker']}** — {s['explanation']}  \n<small>explained by {s['explained_by']}</small>",
                                 unsafe_allow_html=True)
 
-        with st.expander("🏦 Fundamentals Analyst — healthy, reasonably priced businesses? (advisory)", expanded=False):
+        with st.expander("🏦 Fundamentals Analyst — healthy, reasonably priced businesses?", expanded=False):
             funds = run.get("fundamentals")
             if funds is None:
                 st.write("This run happened before the Fundamentals Analyst existed.")
@@ -193,7 +193,7 @@ def page():
                         column_config=helps("Fundamentals", "Score", "P/E", "FCF yield", "Revenue growth", "Operating margin", "ROE", "Debt/equity"))
                 for f in funds:
                     st.markdown(f"**{f['ticker']}** — {f['explanation'] if f['available'] else f['reason']}")
-                st.caption("Advisory for now: the Portfolio Manager doesn't act on these yet. Source: each company's latest annual report (10-K) via the SEC.")
+                st.caption("The Portfolio Manager blends these scores (40%) with the Market Analyst's (60%). Source: each company's latest annual report (10-K) via the SEC.")
 
         with st.expander("🧠 Portfolio Manager — buy, sell or hold", expanded=True):
             icon = {"buy": "🟢", "sell": "🔴", "hold": "⚪"}

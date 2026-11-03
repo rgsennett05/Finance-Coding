@@ -50,12 +50,12 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 | Agent | Job | How |
 |---|---|---|
 | Market Analyst | Pulls price/volume data and technical signals | Code computes signals; model explains them |
-| Fundamentals Analyst | Earnings, valuation, company health | Code scores SEC annual-report data (`agents/fundamentals_analyst.py`); **advisory** — logged and shown, not yet used in decisions |
+| Fundamentals Analyst | Earnings, valuation, company health | Code scores SEC annual-report data (`agents/fundamentals_analyst.py`); feeds 40% of the Portfolio Manager's blended score |
 | News/Sentiment Analyst | Summarizes recent news and market mood | Stage 3 |
 | Bull Researcher | Strongest case FOR a trade | Stage 3 |
 | Bear Researcher | Strongest case AGAINST a trade | Stage 3 |
 | Risk Manager | Position sizes and limits; can veto trades | **Plain code** enforces limits; model may explain a veto |
-| Portfolio Manager | Weighs everything and makes the final call | Claude Opus proposes orders |
+| Portfolio Manager | Weighs everything and makes the final call | Rules mode: blended score = 60% market + 40% fundamentals; buy above +0.33, sell below −0.33 (all in settings.toml). Claude Opus later. |
 | Auditor | Logs every decision and checks it followed the rules | Stage 3 |
 
 **Default risk limits** (in `config/settings.toml`, enforced by the Risk Manager):
@@ -173,8 +173,10 @@ them.
       email) plus the live price; scores valuation (P/E, FCF yield), growth (revenue), profitability
       (operating margin, ROE) and health (debt/equity) from −1 to +1 → strong/average/weak. Banks skip
       margin/FCF/debt; funds (VOO) are skipped; reports older than ~18 months aren't judged. Runs in
-      the daily loop as advisory only — wiring it into the Portfolio Manager's rules is the owner's
-      decision and the next step. Known gap: XOM's current SEC filer has no 10-K figures yet.
+      the daily loop. Owner chose option B (2026-11-03): the Portfolio Manager blends 60% market score +
+      40% fundamentals score (missing fundamentals → market score alone). The backtest passes no
+      fundamentals (there's no point-in-time history), so it still tests the market-only rules.
+      Known gap: XOM's current SEC filer has no 10-K figures yet.
       In the city it's the Valuation Bank (columned portico, gold dome) on Research Row, and replays
       send a gold "fundamentals" pulse to Headquarters.
 **Done when:** the city runs live alongside a real paper-trading run.

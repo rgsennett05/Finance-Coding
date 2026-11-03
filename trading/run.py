@@ -42,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
     for s in sorted(signals, key=lambda s: -s.score):
         print(f"   {s.ticker:<6} {s.label:<8} score {s.score:+.2f}")
 
-    print("\n🏦 Fundamentals Analyst (advisory — reported, not yet used in decisions)")
+    print("\n🏦 Fundamentals Analyst")
     try:
         fundamentals = fundamentals_analyst.run(settings.tickers, {s.ticker: s.price for s in signals}, skip={settings.benchmark})
     except Exception as err:   # advisory agent: a data problem must never stop trading
@@ -52,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"   {f.ticker:<6} " + (f"{f.label:<8} score {f.score:+.2f}" if f.available and f.score is not None else f"— {f.reason}"))
 
     print("\n🧠 Portfolio Manager")
-    decisions = portfolio_manager.decide(signals, portfolio, settings)
+    decisions = portfolio_manager.decide(signals, portfolio, settings, fundamentals)
     for d in decisions:
         print(f"   {d.ticker:<6} {d.reason}")
 
