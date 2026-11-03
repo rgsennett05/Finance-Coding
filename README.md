@@ -59,9 +59,15 @@ to the run in the **Actions** tab as `fund-logs`.
 streamlit run dashboard/app.py
 ```
 
-Then open the address it prints (usually http://localhost:8501). It shows portfolio value vs. VOO,
-open positions, recent orders, and what each agent decided in the latest run. Press **Refresh** to
-reload from Alpaca.
+Then open the address it prints (usually http://localhost:8501). Two pages:
+
+- **Overview** — portfolio value vs. VOO, open positions, recent orders, and what each agent decided
+  in the latest run.
+- **City** — a 3D city: each agent is a building, each stock a tower. Press **▶ Replay latest run**
+  to watch signals, decisions and orders travel between buildings; drag to rotate, scroll to zoom,
+  click a building for its reasoning. Needs an internet connection (it loads Three.js).
+
+Press **Refresh** to reload from Alpaca.
 
 ## Settings
 Watchlist, risk limits and which Claude model each agent uses are in

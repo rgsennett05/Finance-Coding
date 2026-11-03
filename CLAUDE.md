@@ -79,7 +79,7 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 ├── data/            # market data helpers (Alpaca)
 ├── trading/         # order placement (paper only)
 ├── logs/            # decision + trade logs (Auditor writes here; not uploaded to GitHub)
-├── dashboard/       # Streamlit app and city view
+├── dashboard/       # Streamlit app: app.py (navigation), overview.py, city_page.py + city.html
 ├── .streamlit/      # Streamlit settings (no usage tracking, minimal toolbar)
 ├── .github/         # daily automatic run on GitHub Actions
 └── tests/           # simple checks that things work (run: pytest)
@@ -118,6 +118,13 @@ agent's reasoning for the latest run.
 Add Fundamentals, News/Sentiment, Bull vs. Bear debate, and Auditor (one at a time). Build the
 animated city view: each agent is a building that lights up when active, with trades flowing between
 them.
+- [x] 3D city, first version — started early on 2026-11-02 at the owner's request while Stage 2 waits
+      for orders to fill. "City" page in the dashboard (`dashboard/city_page.py`); the scene is
+      `dashboard/city.html` (Three.js 0.160 from jsDelivr) and its data comes from
+      `dashboard/city_data.py`. Style chosen by the owner: clean, bright, daylight future city.
+      Agents = buildings on Agent Row; stocks = towers in the Market District (height = value,
+      crown = gain/loss, scaffolding = waiting order); VOO = monument; Stage 3 agents = dashed lots.
+      "Replay latest run" animates the run log as pulses between buildings.
 **Done when:** the city runs live alongside a real paper-trading run.
 
 ### Stage 4 — Polish and share

@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trading City</title>
+<style>
+  :root {
+    --sky-top: #cfe3f7; --sky-bottom: #f6f9fc;
+    --ink: #14202e; --ink-2: #4b5a6b; --ink-3: #7b8796;
+    --glass: rgba(255,255,255,0.82); --line: rgba(20,32,46,0.10);
+    --accent: #2a78d6;
+    --signal: #2a78d6; --proposal: #6250d6; --order: #1baf7a; --skipped: #c98500; --blocked: #e34948; --preview: #7b8796;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink);
+    background: linear-gradient(var(--sky-top), var(--sky-bottom)); }
+  #scene { position: fixed; inset: 0; }
+  .hud { position: fixed; background: var(--glass); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(20,32,46,0.08); }
+  #title { top: 14px; left: 14px; padding: 10px 14px; min-width: 210px; }
+  #title h1 { margin: 0 0 4px; font-size: 18px; letter-spacing: .02em; }
+  #title .row { display: flex; justify-content: space-between; gap: 18px; font-size: 13px; color: var(--ink-2); }
+  #title .row b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  #title .meta { margin-top: 6px; font-size: 12px; color: var(--ink-3); }
+  #controls { top: 14px; right: 14px; padding: 8px; display: flex; gap: 8px; }
+  button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px;
+    padding: 7px 12px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #caption { left: 50%; bottom: 16px; transform: translateX(-50%); padding: 9px 16px; font-size: 14px; max-width: min(640px, 90vw);
+    text-align: center; transition: opacity .3s; }
+  #legend { left: 14px; bottom: 14px; padding: 10px 12px; font-size: 12px; color: var(--ink-2); }
+  #legend div { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
+  #legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  #panel { top: 70px; right: 14px; width: min(380px, calc(100vw - 28px)); max-height: calc(100% - 150px); overflow: auto; padding: 16px;
+    display: none; }
+  #panel.open { display: block; }
+  #panel h2 { margin: 0; font-size: 17px; }
+  #panel .sub { color: var(--ink-3); font-size: 12px; margin-bottom: 10px; }
+  #panel .close { position: absolute; top: 10px; right: 10px; padding: 3px 9px; }
+  #panel ul { padding-left: 18px; margin: 8px 0 0; }
+  #panel li { margin: 6px 0; color: var(--ink-2); }
+  #panel table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  #panel td { padding: 5px 0; border-bottom: 1px solid var(--line); }
+  #panel td:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .tag { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 99px; background: #eef3f9; color: var(--ink-2); margin-left: 6px; }
+  .tag.good { background: #e3f6ee; color: #0d7a52; } .tag.bad { background: #fde9e8; color: #b3302f; } .tag.warn { background: #fdf3dc; color: #8a5a00; }
+  .label { font-size: 12px; padding: 3px 9px; border-radius: 8px; background: rgba(255,255,255,0.9); border: 1px solid var(--line);
+    color: var(--ink); white-space: nowrap; pointer-events: none; box-shadow: 0 2px 8px rgba(20,32,46,0.08); text-align: center; }
+  .label small { display: block; color: var(--ink-3); font-size: 10.5px; }
+  .label.planned { opacity: .7; border-style: dashed; }
+  .label.active { border-color: var(--accent); }
+  #fallback { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; color: var(--ink-2); }
+  @media (max-width: 640px) { #legend { display: none; } #title { min-width: 0; } }
+</style>
+</head>
+<body>
+<div id="scene" aria-label="3D city of the fund's agents and stocks. Use the panel and caption for the same information as text."></div>
+
+<div id="title" class="hud">
+  <h1>🏙️ Trading City</h1>
+  <div class="row"><span>Portfolio</span><b id="pv">—</b></div>
+  <div class="row"><span>Cash</span><b id="cash">—</b></div>
+  <div class="meta" id="meta"></div>
+</div>
+
+<div id="controls" class="hud">
+  <button id="replay" class="primary">▶ Replay latest run</button>
+  <button id="reset">⟲ View</button>
+</div>
+
+<div id="panel" class="hud" role="dialog" aria-live="polite"><button class="close" id="close" aria-label="Close">✕</button><div id="panelBody"></div></div>
+<div id="caption" class="hud">Drag to rotate · scroll to zoom · click any building</div>
+<div id="legend" class="hud">
+  <div><i style="background:var(--signal)"></i>Signals</div>
+  <div><i style="background:var(--proposal)"></i>Proposed trades</div>
+  <div><i style="background:var(--order)"></i>Order sent ✓</div>
+  <div><i style="background:var(--skipped)"></i>Order skipped (waiting) ⏸</div>
+  <div><i style="background:var(--preview)"></i>Preview only (dry run)</div>
+  <div><i style="background:var(--blocked)"></i>Blocked by risk ✕</div>
+</div>
+<div id="fallback">The 3D city needs WebGL and an internet connection to load. The Overview page shows the same information.</div>
+
+<script>
+  const CITY = /*__CITY_STATE__*/null;
+</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+
+const state = CITY || { agents: [], flows: [], stocks: [], account: {}, run: {} };
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (id) => document.getElementById(id);
+const money = (n) => (n == null ? "—" : "$" + n.toLocaleString("en-US", { maximumFractionDigits: 2 }));
+const pct = (n, d = 1) => (n == null ? "—" : (n >= 0 ? "+" : "") + (n * 100).toFixed(d) + "%");
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const COLORS = { signal: 0x2a78d6, proposal: 0x6250d6, order: 0x1baf7a, skipped: 0xc98500, preview: 0x7b8796, blocked: 0xe34948 };
+
+// ---------- HUD ----------
+$("pv").textContent = money(state.account.portfolio_value);
+$("cash").textContent = money(state.account.cash);
+$("meta").textContent = [
+  state.market_open ? "🟢 Market open" : "🔴 Market closed",
+  state.run.at ? `Last run ${state.run.at.slice(0, 16).replace("T", " ")} UTC · ${state.run.mode === "paper" ? "paper trades" : "preview"}` : "No runs yet",
+].join(" · ");
+
+// ---------- Renderer, scene, camera ----------
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+} catch (e) {
+  $("fallback").style.display = "flex";
+  throw e;
+}
+const host = $("scene");
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+host.appendChild(renderer.domElement);
+const labels = new CSS2DRenderer();
+labels.domElement.style.position = "absolute";
+labels.domElement.style.top = "0";
+labels.domElement.style.pointerEvents = "none";
+host.appendChild(labels.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xeef4fa, 220, 420);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 600);
+const HOME = { pos: new THREE.Vector3(6, 78, 112), target: new THREE.Vector3(0, 0, -18) };
+camera.position.copy(HOME.pos);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME.target);
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI / 2.15;
+controls.minDistance = 25;
+controls.maxDistance = 220;
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0xdfe6ee, 1.1));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(-50, 90, 40);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -90, right: 90, top: 90, bottom: -90, near: 10, far: 260 });
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+
+// ---------- Ground, plazas and streets ----------
+const ground = new THREE.Mesh(new THREE.CircleGeometry(170, 64), new THREE.MeshStandardMaterial({ color: 0xf1f4f7, roughness: 1 }));
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+const grid = new THREE.GridHelper(240, 60, 0xdfe5ec, 0xe8edf2);
+grid.position.y = 0.01;
+scene.add(grid);
+
+const streetMat = new THREE.MeshStandardMaterial({ color: 0xdde3ea, roughness: 0.9 });
+const laneMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+function street(x1, z1, x2, z2, w = 4) {
+  const len = Math.hypot(x2 - x1, z2 - z1);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(len, w), streetMat);
+  m.rotation.x = -Math.PI / 2;
+  m.rotation.z = -Math.atan2(z2 - z1, x2 - x1);
+  m.position.set((x1 + x2) / 2, 0.03, (z1 + z2) / 2);
+  m.receiveShadow = true;
+  scene.add(m);
+  const lane = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.18), laneMat);
+  lane.rotation.copy(m.rotation);
+  lane.position.set(m.position.x, 0.05, m.position.z);
+  scene.add(lane);
+}
+const AVENUE_Z = -4, PLANNED_Z = -54, AGENT_Z = -22, MARKET_Z = 18;
+street(-70, AVENUE_Z, 70, AVENUE_Z, 6);         // main avenue
+street(-70, PLANNED_Z + 10, 70, PLANNED_Z + 10, 3); // back street to the planned lots
+
+function plaza(x, z, w, d, color = 0xe9eef4) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.4, d), new THREE.MeshStandardMaterial({ color, roughness: 0.8 }));
+  m.position.set(x, 0.2, z);
+  m.receiveShadow = true;
+  scene.add(m);
+}
+
+// ---------- Building helpers ----------
+const pickables = [];        // meshes the pointer can hit
+const buildings = {};        // id -> { group, glow:[materials], anchor:Vector3, kind, data, label }
+
+function glassMat(tint = 0xf7fafd) {
+  return new THREE.MeshPhysicalMaterial({ color: tint, roughness: 0.18, metalness: 0.05, clearcoat: 0.6, clearcoatRoughness: 0.2 });
+}
+function edges(mesh, color = 0xb9c4d0) {
+  const e = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), new THREE.LineBasicMaterial({ color }));
+  e.position.copy(mesh.position);
+  e.rotation.copy(mesh.rotation);
+  return e;
+}
+function windowBands(group, w, d, y0, h, floors, glowList, color = 0x9fc4ee) {
+  const mat = new THREE.MeshStandardMaterial({ color, emissive: 0x2a78d6, emissiveIntensity: 0.0, roughness: 0.3 });
+  glowList.push(mat);
+  for (let i = 0; i < floors; i++) {
+    const y = y0 + (i + 0.5) * (h / floors);
+    for (const [bw, bd] of [[w + 0.06, d * 0.82], [w * 0.82, d + 0.06]]) {
+      const band = new THREE.Mesh(new THREE.BoxGeometry(bw, h / floors * 0.32, bd), mat);
+      band.position.y = y;
+      group.add(band);
+    }
+  }
+}
+function block(group, w, h, d, y = 0, mat = glassMat()) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.y = y + h / 2;
+  m.castShadow = m.receiveShadow = true;
+  group.add(m, edges(m));
+  return m;
+}
+function addLabel(group, html, y, cls = "") {
+  const div = document.createElement("div");
+  div.className = "label " + cls;
+  div.innerHTML = html;
+  const obj = new CSS2DObject(div);
+  obj.position.set(0, y, 0);
+  group.add(obj);
+  return div;
+}
+function register(id, group, kind, data, anchorY, glow, label) {
+  group.traverse((o) => { if (o.isMesh) { o.userData.id = id; pickables.push(o); } });
+  buildings[id] = { id, group, kind, data, glow, label, anchor: new THREE.Vector3(group.position.x, anchorY, group.position.z), pulse: 0 };
+}
+
+// ---------- Agent buildings ----------
+const agentsById = Object.fromEntries(state.agents.map((a) => [a.id, a]));
+const BUILT = {
+  market_analyst: { x: -24, make: (g, glow) => {
+    block(g, 7, 24, 7);
+    windowBands(g, 7, 7, 0, 24, 8, glow);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.25, 7), new THREE.MeshStandardMaterial({ color: 0xaab6c3 }));
+    mast.position.y = 27.5; g.add(mast);
+    const dish = new THREE.Mesh(new THREE.SphereGeometry(0.7, 20, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x2a78d6, emissiveIntensity: 0 }));
+    dish.position.y = 31.2; g.add(dish); glow.push(dish.material);
+    return 33;
+  } },
+  portfolio_manager: { x: 0, make: (g, glow) => {
+    block(g, 13, 14, 13); windowBands(g, 13, 13, 0, 14, 4, glow);
+    block(g, 9.5, 11, 9.5, 14); windowBands(g, 9.5, 9.5, 14, 11, 3, glow);
+    block(g, 6, 9, 6, 25); windowBands(g, 6, 6, 25, 9, 3, glow);
+    const crown = new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.18, 10, 48), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x2a78d6, emissiveIntensity: 0 }));
+    crown.rotation.x = Math.PI / 2; crown.position.y = 35; g.add(crown); glow.push(crown.material);
+    g.userData.spin = crown;
+    return 38;
+  } },
+  risk_manager: { x: 24, make: (g, glow) => {
+    block(g, 14, 9, 10); windowBands(g, 14, 10, 0, 9, 3, glow, 0xb9d6c9);
+    for (const [dx, dz] of [[-6, -4], [6, -4], [-6, 4], [6, 4]]) {
+      const t = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.7, 13, 24), glassMat(0xf2f6f4));
+      t.position.set(dx, 6.5, dz); t.castShadow = true; g.add(t);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, 0.6, 24), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x1baf7a, emissiveIntensity: 0 }));
+      cap.position.set(dx, 13.3, dz); g.add(cap); glow.push(cap.material);
+    }
+    return 16;
+  } },
+};
+
+for (const a of state.agents) {
+  if (BUILT[a.id]) {
+    const g = new THREE.Group();
+    g.position.set(BUILT[a.id].x, 0.4, AGENT_Z);
+    plaza(BUILT[a.id].x, AGENT_Z, 20, 18);
+    street(BUILT[a.id].x, AGENT_Z + 9, BUILT[a.id].x, AVENUE_Z, 3);
+    const glow = [];
+    const top = BUILT[a.id].make(g, glow);
+    const label = addLabel(g, `${esc(a.name)}<small>${esc(a.building)}</small>`, top + 2.5, a.status === "active" ? "active" : "");
+    scene.add(g);
+    register(a.id, g, "agent", a, top * 0.55, glow, label);
+  }
+}
+
+// Planned (Stage 3) agents: dashed outlines on the back street.
+const planned = state.agents.filter((a) => a.status === "planned");
+planned.forEach((a, i) => {
+  const x = (i - (planned.length - 1) / 2) * 19;
+  const g = new THREE.Group();
+  g.position.set(x, 0.4, PLANNED_Z);
+  plaza(x, PLANNED_Z, 11, 11, 0xedf1f5);
+  const h = 10 + (i % 3) * 3;
+  const ghost = new THREE.Mesh(new THREE.BoxGeometry(7, h, 7), new THREE.MeshBasicMaterial({ color: 0x9fb3c8, transparent: true, opacity: 0.12 }));
+  ghost.position.y = h / 2;
+  const outline = new THREE.LineSegments(new THREE.EdgesGeometry(ghost.geometry), new THREE.LineDashedMaterial({ color: 0x8aa0b6, dashSize: 0.6, gapSize: 0.4 }));
+  outline.position.copy(ghost.position);
+  outline.computeLineDistances();
+  g.add(ghost, outline);
+  const label = addLabel(g, `<small>${esc(a.name.replace(" Analyst", "").replace(" Researcher", ""))} · Stage 3</small>`, h + 1.5, "planned");
+  scene.add(g);
+  register(a.id, g, "agent", a, h / 2, [], label);
+});
+
+// ---------- Market district: one tower per stock ----------
+const stocks = state.stocks;
+const cols = Math.max(1, stocks.length);
+stocks.forEach((s, i) => {
+  const x = (i - (cols - 1) / 2) * 11;
+  const z = MARKET_Z;
+  const g = new THREE.Group();
+  g.position.set(x, 0.4, z);
+  plaza(x, z, 9, 9, s.benchmark ? 0xf3efe6 : 0xe9eef4);
+  street(x, z - 4.5, x, AVENUE_Z, 2.5);
+  const glow = [];
+  let top;
+  if (s.benchmark) {
+    const obelisk = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 1.8, 13, 4), new THREE.MeshStandardMaterial({ color: 0xfbfaf6, roughness: 0.35 }));
+    obelisk.rotation.y = Math.PI / 4;
+    obelisk.position.y = 6.5; obelisk.castShadow = true;
+    g.add(obelisk, edges(obelisk, 0xd8d0bd));
+    top = 13.5;
+  } else {
+    const h = s.value > 0 ? 3 + (s.value / 1000) * 1.6 : 1.2;   // ~$10k -> ~19 units tall
+    const body = block(g, 5, h, 5, 0, glassMat(s.value > 0 ? 0xf7fafd : 0xeef2f6));
+    if (s.value > 0) windowBands(g, 5, 5, 0, h, Math.max(2, Math.round(h / 3)), glow);
+    if (s.pl_pct != null && s.value > 0) {
+      const up = s.pl_pct >= 0;
+      const crown = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.6, 5.4), new THREE.MeshStandardMaterial({ color: up ? 0x1baf7a : 0xe34948, emissive: up ? 0x1baf7a : 0xe34948, emissiveIntensity: 0.35 }));
+      crown.position.y = h + 0.3; g.add(crown);
+    }
+    if (s.pending) {
+      const sh = 16;
+      const scaffold = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(5.6, sh, 5.6, 1, 6, 1)),
+        new THREE.LineBasicMaterial({ color: 0xc98500, transparent: true, opacity: 0.9 }));
+      scaffold.position.y = sh / 2; g.add(scaffold);
+      g.userData.scaffold = scaffold;
+      top = sh;
+    } else top = h;
+    body.userData.id = s.ticker;
+  }
+  const sub = s.benchmark ? "benchmark" : s.pending ? "order waiting" : s.shares ? `${s.shares} sh · ${pct(s.pl_pct)}` : (s.label || "not owned");
+  const label = addLabel(g, `<b>${esc(s.ticker)}</b><small>${esc(sub)}</small>`, top + 2.2);
+  scene.add(g);
+  register(s.ticker, g, "stock", s, Math.min(top, 10), glow, label);
+});
+
+// A district sign
+function sign(text, x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z);
+  addLabel(g, `<small style="font-size:11px;letter-spacing:.12em">${text}</small>`, 1.2);
+  scene.add(g);
+}
+sign("AGENT ROW", -46, AGENT_Z);
+sign("MARKET DISTRICT", -44, MARKET_Z + 8);
+sign("UNDER CONSTRUCTION · STAGE 3", -64, PLANNED_Z);
+
+// ---------- Trees and park strips (a little green in the white city) ----------
+const leafMat = new THREE.MeshStandardMaterial({ color: 0x8cc9a4, roughness: 0.9 });
+const trunkMat = new THREE.MeshStandardMaterial({ color: 0xc9b9a4, roughness: 1 });
+function tree(x, z, s = 1) {
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * s, 0.2 * s, 1.4 * s), trunkMat);
+  trunk.position.y = 0.7 * s;
+  const crown = new THREE.Mesh(new THREE.SphereGeometry(1.1 * s, 14, 10), leafMat);
+  crown.position.y = 2.1 * s;
+  crown.castShadow = true;
+  g.add(trunk, crown);
+  g.position.set(x, 0, z);
+  scene.add(g);
+}
+for (let x = -66; x <= 66; x += 6) {
+  if (Math.abs(x) % 12 === 0) continue;
+  tree(x, AVENUE_Z - 5, 0.9);
+  tree(x + 3, AVENUE_Z + 5, 0.9);
+}
+const parkMat = new THREE.MeshStandardMaterial({ color: 0xd7ecdf, roughness: 1 });
+for (const [x, z, w, d] of [[-46, AGENT_Z, 14, 16], [46, AGENT_Z, 14, 16], [0, MARKET_Z + 13, 90, 5]]) {
+  const park = new THREE.Mesh(new THREE.BoxGeometry(w, 0.25, d), parkMat);
+  park.position.set(x, 0.12, z);
+  park.receiveShadow = true;
+  scene.add(park);
+  for (let i = 0; i < Math.round(w * d / 40); i++) tree(x + (Math.random() - 0.5) * (w - 2), z + (Math.random() - 0.5) * (d - 2), 0.8 + Math.random() * 0.5);
+}
+
+// ---------- Ambient traffic on the avenue ----------
+const cars = [];
+for (let i = 0; i < 14; i++) {
+  const car = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 1.2, 4, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x9fc4ee, emissiveIntensity: 0.6 }));
+  car.rotation.z = Math.PI / 2;
+  car.userData = { lane: i % 2 ? 1.2 : -1.2, speed: (i % 2 ? -1 : 1) * (6 + (i % 5)), x: -70 + i * 10 };
+  scene.add(car);
+  cars.push(car);
+}
+
+// ---------- Flows: pulses travelling along the streets ----------
+function routeBetween(a, b) {
+  const A = buildings[a].anchor, B = buildings[b].anchor;
+  const p = (x, z, y = 0.9) => new THREE.Vector3(x, y, z);
+  return new THREE.CatmullRomCurve3([
+    A.clone(), p(A.x, A.z + (A.z < AVENUE_Z ? 9 : -5)), p(A.x, AVENUE_Z), p(B.x, AVENUE_Z), p(B.x, B.z + (B.z < AVENUE_Z ? 9 : -5)), B.clone(),
+  ], false, "catmullrom", 0.05);
+}
+const pulseGeo = new THREE.SphereGeometry(0.55, 16, 12);
+const active = [];   // running pulses
+function launch(step, done) {
+  if (!buildings[step.from] || !buildings[step.to]) return done();
+  const curve = routeBetween(step.from, step.to);
+  const color = COLORS[step.kind] ?? COLORS.preview;
+  const mats = [];
+  for (let i = 0; i < 6; i++) {
+    const m = new THREE.Mesh(pulseGeo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 - i * 0.14 }));
+    m.scale.setScalar(1 - i * 0.1);
+    scene.add(m);
+    mats.push(m);
+  }
+  const stopAt = step.kind === "blocked" ? 0.55 : 1;
+  active.push({ curve, mats, t: 0, dur: reduceMotion ? 0.01 : 1.9, stopAt, step, done });
+}
+
+let playing = false;
+async function replay() {
+  if (playing) return;
+  playing = true;
+  $("replay").disabled = true;
+  closePanel();
+  const flows = state.flows;
+  if (!flows.length) { caption("No run logged yet — run the fund to see the city at work."); }
+  setGlow("market_analyst", 1);
+  caption("📈 Market Analyst reads prices and calculates signals…");
+  await wait(1200);
+  for (const step of flows) {
+    const icon = { signal: "📈", proposal: "🧠", order: "✅", skipped: "⏸", preview: "👁", blocked: "⛔" }[step.kind] || "•";
+    caption(`${icon} ${step.label}`);
+    setGlow(step.from, 1);
+    await new Promise((res) => launch(step, res));
+    if (step.kind !== "blocked") flash(step.to, step.kind);
+    else flash(step.from, "blocked");
+    await wait(450);
+  }
+  caption(flows.length ? "Run complete — click any building for the reasoning." : "Click any building to explore.");
+  setTimeout(() => Object.keys(buildings).forEach((id) => setGlow(id, 0.15)), 2500);
+  playing = false;
+  $("replay").disabled = false;
+}
+
+function setGlow(id, level) {
+  const b = buildings[id];
+  if (!b) return;
+  b.glowTarget = level;
+}
+function flash(id, kind) {
+  const b = buildings[id];
+  if (!b) return;
+  setGlow(id, 1);
+  b.flashColor = new THREE.Color(COLORS[kind] ?? COLORS.preview);
+  b.pulse = 1;
+}
+const wait = (ms) => new Promise((r) => setTimeout(r, reduceMotion ? Math.min(ms, 150) : ms));
+let capTimer;
+function caption(text) {
+  const el = $("caption");
+  el.textContent = text;
+  el.style.opacity = 1;
+  clearTimeout(capTimer);
+}
+
+// ---------- Picking + panel ----------
+const ray = new THREE.Raycaster();
+const ptr = new THREE.Vector2();
+let hovered = null;
+function pick(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObjects(pickables, false)[0];
+  return hit ? hit.object.userData.id : null;
+}
+renderer.domElement.addEventListener("pointermove", (ev) => {
+  const id = pick(ev);
+  if (id !== hovered) {
+    if (hovered && buildings[hovered]) buildings[hovered].hover = false;
+    hovered = id;
+    if (id && buildings[id]) buildings[id].hover = true;
+    renderer.domElement.style.cursor = id ? "pointer" : "grab";
+  }
+});
+let downAt = null;
+renderer.domElement.addEventListener("pointerdown", (ev) => (downAt = [ev.clientX, ev.clientY]));
+renderer.domElement.addEventListener("pointerup", (ev) => {
+  if (!downAt || Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]) > 5) return;  // was a drag
+  const id = pick(ev);
+  if (id) openPanel(id);
+});
+
+function openPanel(id) {
+  const b = buildings[id];
+  let html;
+  if (b.kind === "agent") {
+    const a = b.data;
+    const tag = a.status === "planned" ? `<span class="tag">planned</span>` : `<span class="tag good">built</span>`;
+    html = `<h2>${esc(a.name)}${tag}</h2><div class="sub">${esc(a.building)} · ${esc(a.role)}</div>
+      <b>Latest run</b><ul>${a.details.map((d) => `<li>${esc(d)}</li>`).join("") || "<li>No run yet.</li>"}</ul>`;
+  } else {
+    const s = b.data;
+    const sig = s.label ? `<span class="tag ${s.label === "bullish" ? "good" : s.label === "bearish" ? "bad" : ""}">${esc(s.label)}</span>` : "";
+    const status = s.benchmark ? "Benchmark — never traded" : s.pending ? "⏸ Buy order waiting to fill" : s.shares ? "Owned" : "Not owned";
+    const rows = [
+      ["Status", status], ["Signal score", s.score == null ? "—" : (s.score >= 0 ? "+" : "") + s.score.toFixed(2)],
+      ["Price", money(s.price)], ["Shares", s.shares || "—"], ["Value", s.value ? money(s.value) : "—"],
+      ["Gain / loss", s.value ? pct(s.pl_pct, 2) : "—"], ["Share of portfolio", s.weight ? pct(s.weight).replace("+", "") : "—"],
+      ["Stop-loss", money(s.stop)],
+    ];
+    html = `<h2>${esc(s.ticker)}${sig}</h2><div class="sub">Market District${s.benchmark ? " · the monument we measure against" : ""}</div>
+      <table>${rows.map(([k, v]) => `<tr><td>${k}</td><td>${esc(v)}</td></tr>`).join("")}</table>`;
+  }
+  $("panelBody").innerHTML = html;
+  $("panel").classList.add("open");
+  focusOn(b);
+}
+function closePanel() { $("panel").classList.remove("open"); }
+$("close").onclick = closePanel;
+
+// ---------- Camera moves ----------
+let camAnim = null;
+function moveCamera(pos, target) {
+  camAnim = { from: camera.position.clone(), fromT: controls.target.clone(), to: pos, toT: target, t: 0 };
+}
+function focusOn(b) {
+  const t = b.anchor.clone();
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  moveCamera(t.clone().add(dir.multiplyScalar(78)), t);
+}
+$("reset").onclick = () => { closePanel(); moveCamera(HOME.pos.clone(), HOME.target.clone()); };
+$("replay").onclick = replay;
+
+// ---------- Resize + loop ----------
+function resize() {
+  const w = host.clientWidth || innerWidth, h = host.clientHeight || innerHeight;
+  renderer.setSize(w, h);
+  labels.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+resize();
+
+const clock = new THREE.Clock();
+const blue = new THREE.Color(0x2a78d6);
+function tick() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  for (const car of cars) {
+    car.userData.x += car.userData.speed * dt * (reduceMotion ? 0 : 1);
+    if (car.userData.x > 72) car.userData.x = -72;
+    if (car.userData.x < -72) car.userData.x = 72;
+    car.position.set(car.userData.x, 0.6, AVENUE_Z + car.userData.lane);
+  }
+
+  for (const b of Object.values(buildings)) {
+    b.glowLevel = THREE.MathUtils.lerp(b.glowLevel ?? 0.15, b.glowTarget ?? 0.15, 1 - Math.exp(-dt * 4));
+    b.pulse = Math.max(0, (b.pulse || 0) - dt * 0.9);
+    const lvl = b.glowLevel + (b.hover ? 0.35 : 0);
+    for (const m of b.glow) {
+      m.emissiveIntensity = lvl * 1.4 + b.pulse * 1.2;
+      if (b.flashColor && b.pulse > 0) m.emissive.copy(b.flashColor); else m.emissive.copy(blue);
+    }
+    const s = 1 + (b.hover ? 0.02 : 0) + b.pulse * 0.03;
+    b.group.scale.set(s, 1 + b.pulse * 0.02, s);
+    if (b.group.userData.spin) b.group.userData.spin.rotation.z += dt * (0.3 + b.glowLevel);
+    if (b.group.userData.scaffold) b.group.userData.scaffold.material.opacity = 0.55 + 0.35 * Math.sin(t * 2.5);
+    b.label.style.opacity = b.hover ? 1 : 0.92;
+  }
+
+  for (let i = active.length - 1; i >= 0; i--) {
+    const p = active[i];
+    p.t = Math.min(p.stopAt, p.t + dt / p.dur);
+    p.mats.forEach((m, k) => {
+      const u = Math.max(0, p.t - k * 0.025);
+      m.position.copy(p.curve.getPointAt(Math.min(u, 1)));
+    });
+    if (p.t >= p.stopAt) {
+      p.mats.forEach((m) => scene.remove(m));
+      active.splice(i, 1);
+      p.done();
+    }
+  }
+
+  if (camAnim) {
+    camAnim.t = Math.min(1, camAnim.t + dt / 1.1);
+    const e = 1 - Math.pow(1 - camAnim.t, 3);
+    camera.position.lerpVectors(camAnim.from, camAnim.to, e);
+    controls.target.lerpVectors(camAnim.fromT, camAnim.toT, e);
+    if (camAnim.t >= 1) camAnim = null;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+  labels.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+setTimeout(replay, reduceMotion ? 0 : 900);
+window.__cityReady = true;
+</script>
+</body>
+</html>
