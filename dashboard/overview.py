@@ -6,6 +6,7 @@ import pandas as pd
 import streamlit as st
 
 from dashboard.data import latest_run
+from dashboard.glossary import GLOSSARY, helps
 from dashboard.live_cache import live
 
 FUND_COLOR, BENCH_COLOR = "#2a78d6", "#eb6834"   # categorical slots 1 and 2
@@ -52,15 +53,16 @@ def page():
     bench_total = bench_rows["pct"].iloc[-1] if fund_days >= 2 and not bench_rows.empty else None
 
     c = st.columns(4)
-    c[0].metric("Portfolio value", money(acct["portfolio_value"]))
-    c[1].metric("Cash", money(acct["cash"]), f"{acct['cash'] / acct['portfolio_value']:.0%} of portfolio", delta_color="off")
-    c[2].metric("Today", money(acct["today_change"]), f"{acct['today_pct']:+.2%}")
+    c[0].metric("Portfolio value", money(acct["portfolio_value"]), help=GLOSSARY["Portfolio value"])
+    c[1].metric("Cash", money(acct["cash"]), f"{acct['cash'] / acct['portfolio_value']:.0%} of portfolio", delta_color="off", help=GLOSSARY["Cash"])
+    c[2].metric("Today", money(acct["today_change"]), f"{acct['today_pct']:+.2%}", help=GLOSSARY["Today"])
     c[3].metric(
         f"Since start vs {d['benchmark']}",
         f"{fund_total:+.2%}",
         "comparison starts after 2 days of history" if bench_total is None
         else f"{fund_total - bench_total:+.2%} vs {d['benchmark']} ({bench_total:+.2%})",
         delta_color="off" if bench_total is None else "normal",
+        help=GLOSSARY["Benchmark"],
     )
 
     # --------------------------------------------------------------------------
@@ -76,11 +78,11 @@ def page():
             rows.append({
                 "Stock": t,
                 "Price": money(q["price"]),
-                "Today": "—" if q["change_pct"] is None else f"{q['change_pct']:+.2%}",
+                "Today %": "—" if q["change_pct"] is None else f"{q['change_pct']:+.2%}",
                 "Signal": signals.get(t, {}).get("label", "—"),
                 "Owned": "✓" if t in owned else "",
             })
-        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", column_config=helps("Price", "Today %", "Signal", "Owned"))
         latest = max(q["at"] for q in quotes.values())
         when = pd.Timestamp(latest).tz_convert("America/New_York").strftime("%I:%M %p").lstrip("0")
         st.caption(f"Latest trade prices from Alpaca (IEX), as of {when} New York time. "
@@ -133,11 +135,12 @@ def page():
                     "Gain/loss $": "${:+,.2f}", "Gain/loss %": "{:+.2%}", "Weight": "{:.1%}",
                 }),
                 hide_index=True, width="stretch",
+                column_config=helps("Shares", "Avg cost", "Price", "Value", "Gain/loss $", "Gain/loss %", "Weight", "Stop-loss"),
             )
-            over = pos[pos["Weight"] > 0.10]
+            over = pos[pos["Weight"] > 0.11]
             if not over.empty:
-                st.warning(f"Above the 10% position limit after price moves: {', '.join(over['Stock'])}. "
-                           "Nothing trims positions automatically yet.")
+                st.warning(f"Above 11% of the portfolio after price moves: {', '.join(over['Stock'])}. "
+                           "The next daily run trims it back to 10%.")
 
     with right:
         st.subheader("Recent orders")
@@ -149,7 +152,7 @@ def page():
             shown["Submitted"] = pd.to_datetime(shown["Submitted"]).dt.tz_convert("America/New_York").dt.strftime("%b %d %H:%M")
             for col in ("Fill price", "Stop-loss"):
                 shown[col] = shown[col].map(money)
-            st.dataframe(shown, hide_index=True, width="stretch")
+            st.dataframe(shown, hide_index=True, width="stretch", column_config=helps("Shares", "Status", "Fill price", "Stop-loss"))
             st.caption("Times are New York time. 'accepted' means waiting for the market to open.")
 
     # --------------------------------------------------------------------------
@@ -166,7 +169,8 @@ def page():
                 table.columns = ["Stock", "Signal", "Score", "Price", "12-1 momentum", "RSI", "Volatility"]
                 st.dataframe(table.style.format({"Score": "{:+.2f}", "Price": "${:,.2f}", "12-1 momentum": "{:+.1%}",
                                                  "RSI": "{:.0f}", "Volatility": "{:.0%}"}, na_rep="—"),
-                             hide_index=True, width="stretch")
+                             hide_index=True, width="stretch",
+                             column_config=helps("Signal", "Score", "Price", "12-1 momentum", "RSI", "Volatility"))
                 for s in sorted(run["signals"], key=lambda s: -s["score"]):
                     st.markdown(f"**{s['ticker']}** — {s['explanation']}  \n<small>explained by {s['explained_by']}</small>",
                                 unsafe_allow_html=True)
