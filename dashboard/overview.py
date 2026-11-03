@@ -29,7 +29,7 @@ except Exception as err:  # keys missing, live key refused, network down
     st.error(f"Couldn't load the Alpaca paper account: {err}")
     st.stop()
 
-run = latest_run()
+run = latest_run(include_dry_runs=False) or latest_run()  # prefer the run that actually traded
 clock = d["clock"]
 status = "🟢 Market open" if clock.is_open else f"🔴 Market closed · opens {clock.next_open:%a %b %d, %H:%M} ET"
 last = (f"Last run: {run['run_at'][:16].replace('T', ' ')} UTC "
