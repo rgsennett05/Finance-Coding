@@ -62,8 +62,14 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 - No single position over 10% of the portfolio
 - Keep at least 10% in cash
 - Maximum 10 open positions
-- Stop-loss on every position (8% below entry by default). Alpaca only attaches stop-losses
-  to whole-share orders, so we trade whole shares.
+- Stop-loss on every position, 8% below the price we **actually paid**. Buys are sent with a stop
+  attached; after every run `trading/stops.py` checks each position and moves, re-creates or fixes
+  its stop (or sells at market if the price is already below the stop level). Alpaca only attaches
+  stop-losses to whole-share orders, so we trade whole shares.
+- Trim: a position that grows past 11% (10% limit + `trim_buffer_pct` 1%) is sold back to 10%.
+- Cool-down: no re-buying a stock within `cooldown_days` (7) of a stop-loss selling it.
+- Buys still waiting to fill count against cash and the position/count limits; a stock with a
+  waiting buy never gets a second one.
 
 ## Folder structure
 ```
@@ -101,6 +107,10 @@ Start small: Market Analyst, Risk Manager, Portfolio Manager only.
       placed 2026-11-02 (XOM, KO, AAPL with stop-losses).
 
 **Done when:** one command runs the full loop end to end without errors.
+
+Risk rules tightened on 2026-11-03 (owner's request, no new features): stops at the real fill price,
+trimming, re-buy cool-down, and waiting buys counted against cash. The daily loop is now
+analyze → decide → trim → risk review → orders → stop-loss check → log.
 
 ### Stage 2 — Dashboard ← current stage
 Streamlit app showing: portfolio value over time vs. VOO, open positions, recent trades, and each

@@ -161,6 +161,16 @@ else:
                 head = f"⛔ **{r['side'].upper()} {r['ticker']} blocked**"
             st.markdown(head + "".join(f"\n- {n}" for n in r.get("notes", [])))
 
+    with st.expander("🧯 Stop-loss check — is every position protected?", expanded=False):
+        acts = run.get("stop_maintenance")
+        if acts is None:
+            st.write("This run happened before the stop-loss check existed.")
+        elif not acts:
+            st.write("No positions to protect yet.")
+        for a in acts or []:
+            icon = {"ok": "✅", "create": "➕", "replace": "🔧", "exit": "🔴", "skip": "⏭️"}.get(a["action"], "•")
+            st.markdown(f"{icon} **{a['ticker']}** — {a['detail']} `{a['status']}`")
+
     with st.expander("📨 Orders sent this run", expanded=False):
         for o in run.get("orders", []):
             st.markdown(f"`{o['status'].upper()}` {o['side'].upper()} {o['qty']} **{o['ticker']}** — {o['detail']}")

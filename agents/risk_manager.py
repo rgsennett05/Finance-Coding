@@ -12,6 +12,11 @@ Rules (from config/settings.toml):
   - Stop-loss on every buy, stop_loss_pct below the entry price
   - Whole shares only (Alpaca only attaches stop-losses to whole-share orders)
   - No shorting (can't sell what we don't own) and no borrowed money
+  - Buys still waiting to fill count against cash and position limits, and a
+    stock with a buy already waiting can't get a second one
+  - Cool-down: no re-buying a stock within cooldown_days of a stop-loss selling it
+  - Trimming: a position that grows past max_position_pct + trim_buffer_pct is
+    sold back down to max_position_pct
 
 Preview on your paper account (places no orders):
     python -m agents.risk_manager
@@ -20,6 +25,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from datetime import date
 
 from config.settings import RiskLimits, load_settings
 from trading.portfolio import PortfolioState
@@ -63,15 +69,43 @@ def stop_price(entry: float, limits: RiskLimits) -> float:
     return round(entry * (1 - limits.stop_loss_pct), 2)
 
 
+def trim_proposals(portfolio: PortfolioState, limits: RiskLimits) -> list[TradeProposal]:
+    """Positions that grew past the limit (plus buffer): sell them back down to the limit."""
+    total = portfolio.portfolio_value
+    out = []
+    if total <= 0:
+        return out
+    cap = limits.max_position_pct * total
+    for t, pos in portfolio.positions.items():
+        if pos.qty <= 0 or pos.price <= 0:
+            continue
+        weight = pos.market_value / total
+        if weight <= limits.max_position_pct + limits.trim_buffer_pct:
+            continue
+        qty = min(pos.qty, math.ceil((pos.market_value - cap) / pos.price))
+        out.append(TradeProposal(
+            t, "sell", pos.price, qty=qty,
+            reason=(f"TRIM: {t} grew to {weight:.1%} of the portfolio, above the "
+                    f"{limits.max_position_pct:.0%} limit (+{limits.trim_buffer_pct:.0%} buffer); "
+                    f"selling {qty} shares to bring it back to {limits.max_position_pct:.0%}."),
+        ))
+    return out
+
+
 def review(
     proposals: list[TradeProposal],
     portfolio: PortfolioState,
     limits: RiskLimits,
+    today: date | None = None,
 ) -> list[RiskDecision]:
     """Check every proposal against the limits. Sells go first so their cash can fund buys."""
+    today = today or date.today()
     total = portfolio.portfolio_value
-    cash = portfolio.cash
+    # Money already promised to buys that haven't filled yet is not available.
+    cash = portfolio.cash - portfolio.pending_cost
     holdings = {t: p.market_value for t, p in portfolio.positions.items()}
+    for t, cost in portfolio.pending_buys.items():
+        holdings[t] = holdings.get(t, 0.0) + cost
     shares = {t: p.qty for t, p in portfolio.positions.items()}
     decisions: list[RiskDecision] = []
     seen: set[str] = set()
@@ -106,6 +140,8 @@ def review(
                 block(p, "Sell quantity must be at least 1 share.")
                 continue
             d = RiskDecision(p.ticker, "sell", True, qty, p.price)
+            if p.reason.startswith("TRIM"):
+                d.notes.append(p.reason)
             if p.qty is not None and p.qty > held:
                 d.notes.append(f"Asked to sell {p.qty} shares but we only own {held}; selling {held}.")
             cash += qty * p.price
@@ -118,6 +154,15 @@ def review(
 
         # ---- buys ----
         notes: list[str] = []
+        if p.ticker in portfolio.pending_buys:
+            block(p, "A buy order for this stock is already waiting to fill; no second order.")
+            continue
+        stopped = portfolio.recently_stopped.get(p.ticker)
+        if stopped is not None and (today - stopped).days < limits.cooldown_days:
+            free = stopped.toordinal() + limits.cooldown_days
+            block(p, f"Cool-down: a stop-loss sold it on {stopped:%b %d}; no re-buying until "
+                     f"{date.fromordinal(free):%b %d} ({limits.cooldown_days}-day rule).")
+            continue
         current = holdings.get(p.ticker, 0.0)
         open_positions = sum(1 for v in holdings.values() if v > 0)
         if current == 0 and open_positions >= limits.max_open_positions:

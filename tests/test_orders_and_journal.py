@@ -55,16 +55,17 @@ def test_blocked_decisions_are_never_sent():
     assert c.submitted == []
 
 
-def test_no_new_buys_while_earlier_buys_wait():
+def test_no_second_buy_for_a_stock_already_waiting():
     c = FakeClient([NS(id="o1", symbol="OLD", side="buy")])
-    res = orders.place([buy("NEW")], client=c, dry_run=False)
-    assert c.submitted == [] and res[0].status == "skipped"
+    res = orders.place([buy("OLD"), buy("NEW")], client=c, dry_run=False)
+    assert [r.status for r in res] == ["skipped", "submitted"]
+    assert len(c.submitted) == 1
 
 
 def test_dry_run_preview_matches_a_real_run():
     c = FakeClient([NS(id="o1", symbol="OLD", side="buy")])
-    res = orders.place([buy("NEW")], client=c, dry_run=True)
-    assert res[0].status == "skipped"
+    res = orders.place([buy("OLD"), buy("NEW")], client=c, dry_run=True)
+    assert [r.status for r in res] == ["skipped", "dry-run"]
 
 
 def test_sell_cancels_that_stocks_stop_first():

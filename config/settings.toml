@@ -11,6 +11,8 @@ max_position_pct = 0.10   # no single position over 10% of the portfolio
 min_cash_pct = 0.10       # keep at least 10% in cash
 max_open_positions = 10
 stop_loss_pct = 0.08      # every position gets a stop-loss 8% below entry
+trim_buffer_pct = 0.01    # trim a position once it passes 11% (10% limit + 1% buffer), back down to 10%
+cooldown_days = 7         # after a stop-loss sells a stock, don't buy it again for 7 calendar days
 
 [portfolio_manager]
 # "rules" = free, rule-based decisions. "ai" = Claude Opus decides (not built yet; needs ANTHROPIC_API_KEY).

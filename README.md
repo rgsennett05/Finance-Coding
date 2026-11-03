@@ -71,6 +71,17 @@ Then open the address it prints (usually http://localhost:8501). Two pages:
 
 Press **Refresh** to reload from Alpaca.
 
+## Risk rules
+
+Enforced by plain code (`agents/risk_manager.py`, `trading/stops.py`), never by an AI:
+
+- At most 10% of the portfolio in one stock; positions that grow past 11% are trimmed back to 10%
+- At least 10% cash; buys still waiting to fill count as already spent
+- At most 10 positions
+- Every position has a stop-loss 8% below the price actually paid, checked after every run
+- No re-buying a stock for 7 days after its stop-loss sells it
+- Whole shares only, no short selling, no borrowed money
+
 ## Settings
 Watchlist, risk limits and which Claude model each agent uses are in
 [`config/settings.toml`](config/settings.toml).

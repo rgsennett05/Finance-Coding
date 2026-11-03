@@ -39,7 +39,9 @@ def decide_rules(signals: list[MarketSignals], portfolio: PortfolioState, settin
         owned = held is not None and held.qty > 0
         signal_txt = f"Market Analyst rates it {s.label} (score {s.score:+.2f})"
 
-        if s.ticker == settings.benchmark:
+        if s.ticker in portfolio.pending_buys and not owned:
+            decisions.append(PMDecision(s.ticker, "hold", f"WAIT: {signal_txt}; a buy order is already waiting to fill."))
+        elif s.ticker == settings.benchmark:
             decisions.append(PMDecision(s.ticker, "hold", f"{s.ticker} is the benchmark we measure against; it is never traded."))
         elif s.label == "bullish" and not owned:
             reason = f"BUY: {signal_txt}, and we don't own it yet."

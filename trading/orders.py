@@ -7,8 +7,9 @@ Only decisions the Risk Manager approved ever reach this file.
     Both use good-till-canceled, so the stop stays in place after today.
   - Sells first cancel that stock's open stop-loss (Alpaca holds the shares
     for it), then sell at market.
-  - If earlier buy orders are still waiting to fill, no new buys are placed,
-    so running twice before the market opens can't double-buy.
+  - A stock that already has a buy waiting to fill never gets a second buy
+    order, so running twice before the market opens can't double-buy. (The
+    Risk Manager also counts waiting buys against cash and position limits.)
 """
 from __future__ import annotations
 
@@ -79,10 +80,9 @@ def place(decisions: list[RiskDecision], client=None, dry_run: bool = True) -> l
     results: list[OrderResult] = []
 
     for d in sorted(approved, key=lambda d: d.side != "sell"):
-        if d.side == "buy" and waiting:
+        if d.side == "buy" and d.ticker in waiting:
             results.append(OrderResult(d.ticker, "buy", d.qty, "skipped",
-                f"Earlier buy orders are still waiting to fill ({', '.join(sorted(waiting))}); "
-                "no new buys until they do."))
+                "A buy order for this stock is already waiting to fill; no second order."))
             continue
         if dry_run:
             results.append(OrderResult(d.ticker, d.side, d.qty, "dry-run", "Not sent (dry run)."))

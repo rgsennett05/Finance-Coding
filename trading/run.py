@@ -1,4 +1,4 @@
-"""Runs the whole fund once: analyze → decide → check risk → trade → log.
+"""Runs the whole fund once: analyze → decide → trim → check risk → trade → fix stop-losses → log.
 
     python -m trading.run --dry-run   # preview everything, place no orders
     python -m trading.run             # place PAPER orders (asks you to confirm)
@@ -12,7 +12,7 @@ import sys
 from agents import market_analyst, portfolio_manager, risk_manager
 from config.settings import load_settings
 from data.broker import LiveKeyError, trading_client
-from trading import journal, orders
+from trading import journal, orders, stops
 from trading.portfolio import from_alpaca
 
 
@@ -30,7 +30,7 @@ def main(argv: list[str] | None = None) -> int:
 
     settings = load_settings()
     clock = client.get_clock()
-    portfolio = from_alpaca()
+    portfolio = from_alpaca(client, settings.risk.cooldown_days)
     mode = "DRY RUN" if opts.dry_run else "PAPER TRADING"
     print(f"\n🏙️  Trading City — {mode}")
     print(f"   Market is {'OPEN' if clock.is_open else 'CLOSED'} (next open {clock.next_open:%a %b %d %H:%M} ET)")
@@ -47,8 +47,14 @@ def main(argv: list[str] | None = None) -> int:
     for d in decisions:
         print(f"   {d.ticker:<6} {d.reason}")
 
+    proposals = portfolio_manager.proposals(decisions)
+    selling = {p.ticker for p in proposals if p.side == "sell"}
+    trims = [t for t in risk_manager.trim_proposals(portfolio, settings.risk) if t.ticker not in selling]
+    for t in trims:
+        print(f"   {t.ticker:<6} {t.reason}")
+
     print("\n🛡️  Risk Manager")
-    reviewed = risk_manager.review(portfolio_manager.proposals(decisions), portfolio, settings.risk)
+    reviewed = risk_manager.review(proposals + trims, portfolio, settings.risk)
     for r in reviewed:
         print("   " + r.summary().replace("\n", "\n   "))
     if not reviewed:
@@ -69,6 +75,13 @@ def main(argv: list[str] | None = None) -> int:
     if not results:
         print("   No orders.")
 
+    print("\n🧯 Stop-loss check")
+    stop_actions = stops.maintain(client, settings.risk, dry_run=dry_run)
+    for a in stop_actions:
+        print(f"   {a.status.upper():<8} {a.ticker:<6} {a.detail}")
+    if not stop_actions:
+        print("   No positions to protect yet.")
+
     path = journal.write({
         "mode": "dry-run" if dry_run else "paper",
         "market_open": clock.is_open,
@@ -78,9 +91,12 @@ def main(argv: list[str] | None = None) -> int:
         "decisions": decisions,
         "risk_review": [{**r.__dict__, "value": r.value} for r in reviewed],
         "orders": results,
+        "trims": trims,
+        "stop_maintenance": stop_actions,
     })
     print(f"\n📝 Logged to {path.relative_to(path.parent.parent)}")
-    return 1 if any(o.status == "failed" for o in results) else 0
+    failed = any(o.status == "failed" for o in results) or any(a.status == "failed" for a in stop_actions)
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

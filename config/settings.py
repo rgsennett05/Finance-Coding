@@ -14,6 +14,8 @@ class RiskLimits:
     min_cash_pct: float
     max_open_positions: int
     stop_loss_pct: float
+    trim_buffer_pct: float = 0.01   # trim only above max_position_pct + this buffer
+    cooldown_days: int = 7          # no re-buy this many calendar days after a stop-out
 
 
 @dataclass(frozen=True)
@@ -34,6 +36,10 @@ def load_settings(path: Path = SETTINGS_PATH) -> Settings:
         value = getattr(risk, name)
         if not 0 < value < 1:
             raise ValueError(f"risk.{name} must be between 0 and 1 (it's a fraction: 0.10 = 10%), got {value}")
+    if not 0 <= risk.trim_buffer_pct < 1:
+        raise ValueError(f"risk.trim_buffer_pct must be between 0 and 1, got {risk.trim_buffer_pct}")
+    if risk.cooldown_days < 0:
+        raise ValueError("risk.cooldown_days can't be negative")
     if risk.max_open_positions < 1:
         raise ValueError("risk.max_open_positions must be at least 1")
 
