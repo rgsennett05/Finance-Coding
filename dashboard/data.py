@@ -158,7 +158,15 @@ def load_live(days: int = 90) -> dict:
         b = bars.xs(settings.benchmark, level=0)["close"]
         bench = pd.Series(b.values, index=[ts.date() for ts in b.index])
 
+    from data.market_data import live_quotes
+
+    try:
+        quotes = live_quotes(sorted(set(settings.tickers) | {settings.benchmark}))
+    except Exception:
+        quotes = {}
+
     return {
+        "quotes": quotes,
         "account": account_overview(client),
         "positions": positions_table(client, open_orders),
         "orders": orders_table(recent),

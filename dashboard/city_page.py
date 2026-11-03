@@ -1,7 +1,8 @@
 """City page: the 3D view of the fund's agents and stocks.
 
-Live mode: the page checks for news every 2 minutes and redraws the city only when
-something changed (a new run, an order filled), so the camera isn't reset needlessly.
+Live: the page refreshes every minute while the market is open (every 10 minutes when it's
+closed) and redraws the city when anything changed: live prices, a new run, an order filled.
+The city remembers the camera, so a refresh doesn't move your view.
 """
 import hashlib
 import json
@@ -18,22 +19,28 @@ top = st.columns([4, 1])
 top[0].title("🏙️ The City")
 if top[1].button("↻ Refresh", width="stretch"):
     st.cache_data.clear()
-st.caption("Each agent is a building; each stock is a tower in the Market District. The sky follows New York time, "
-           "and the streets get busier when the fund is. Press ▶ to replay the latest run, drag to look around, "
-           "tap a building for its reasoning.")
+st.caption("Live: tower labels show each stock's latest price and today's change. The sky follows the real time "
+           "in New York, and the streets get busier when the fund is. Press ▶ to replay the latest run, drag to look "
+           "around, tap a building for its reasoning.")
 
 
 def fingerprint(state: dict) -> str:
-    """What should trigger a redraw: the run, positions, orders. Not every price tick."""
+    """What should trigger a redraw: live prices, the run, positions, orders."""
     key = {
         "run": state["run"],
-        "stocks": [(s["ticker"], s["shares"], s["pending"]) for s in state["stocks"]],
+        "stocks": [(s["ticker"], s["shares"], s["pending"], round(s["price"] or 0, 2)) for s in state["stocks"]],
         "trades": [(t["ticker"], t["status"]) for t in state["trades"]],
     }
     return hashlib.sha1(json.dumps(key, sort_keys=True, default=str).encode()).hexdigest()
 
 
-@st.fragment(run_every="120s")
+try:
+    _open = bool(live()["clock"].is_open)
+except Exception:
+    _open = False
+
+
+@st.fragment(run_every="60s" if _open else "600s")
 def city():
     settings = load_settings()
     try:

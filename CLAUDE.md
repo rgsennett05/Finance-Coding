@@ -146,12 +146,17 @@ them.
       Agents = buildings on Agent Row; stocks = towers in the Market District (height = value,
       crown = gain/loss, scaffolding = waiting order); VOO = monument; Stage 3 agents = dashed lots.
       "Replay latest run" animates the run log as pulses between buildings.
-- [x] 3D city, realistic version (2026-11-03): physically based sky with the sun on New York time
-      (New York time / fast day-night / pick a time), stars, lit windows, street lights and car
+- [x] 3D city, realistic version (2026-11-03): physically based sky with the sun on the real New
+      York time (no time controls — removed at the owner's request), stars, lit windows, street lights and car
       lights at night; a merged skyline of procedural towers around the fund's district (Exchange
       Park keeps the view open); instanced trees, cars and pedestrians whose numbers follow the
       fund's activity level; fading trade-trail arcs for past orders; live mode (auto-replay of a
-      new run; dashboard re-checks every 2 minutes); optional sound (off by default).
+      new run); optional sound (off by default).
+- [x] Live market data (2026-11-03, owner's request: "focus on live data"): latest trade prices and
+      today's change from Alpaca snapshots (`data/market_data.live_quotes`) on every tower label, a live
+      price strip in the city, and a "Live prices" table on the Overview. The Overview refreshes every
+      minute; the City page every minute while the market is open (10 minutes when closed) and keeps
+      the viewer's camera across refreshes. The backtest is kept but not run by default.
 **Done when:** the city runs live alongside a real paper-trading run.
 
 ### Stage 4 — Polish and share

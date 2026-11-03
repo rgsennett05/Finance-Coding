@@ -69,3 +69,13 @@ def test_trades_and_activity():
     busy = activity(RUN, live, now=pd.Timestamp("2026-11-03T01:00:00Z"))
     quiet = activity(None, None, now=pd.Timestamp("2026-11-10T01:00:00Z"))
     assert busy["orders_24h"] == 1 and busy["level"] > quiet["level"]
+
+
+def test_live_quotes_drive_tower_prices():
+    live = dict(LIVE, quotes={"AAA": {"price": 11.5, "prev_close": 10.0, "change_pct": 0.15, "at": "2026-11-03T15:00:00+00:00"}})
+    s = city_state(RUN, live, ["AAA", "VOO"], "VOO")
+    aaa = next(x for x in s["stocks"] if x["ticker"] == "AAA")
+    assert aaa["price"] == 11.5 and aaa["change_pct"] == 0.15 and aaa["live"]
+    assert s["quotes_at"] == "2026-11-03T15:00:00+00:00"
+    voo = next(x for x in s["stocks"] if x["ticker"] == "VOO")
+    assert voo["live"] is False and voo["price"] == 600.0      # falls back to the last signal price

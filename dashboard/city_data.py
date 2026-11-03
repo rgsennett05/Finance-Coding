@@ -98,15 +98,18 @@ def stocks(run: dict | None, live: dict | None, tickers: list[str], benchmark: s
                 pending.add(r["Stock"])
                 if _num(r.get("Stop-loss")):
                     stops[r["Stock"]] = _num(r["Stop-loss"])
+    quotes = (live or {}).get("quotes", {}) if live is not None else {}
     out = []
     for t in dict.fromkeys([*tickers, *pos]):
-        s, p = sig.get(t, {}), pos.get(t, {})
+        s, p, q = sig.get(t, {}), pos.get(t, {}), quotes.get(t, {})
         out.append({
             "ticker": t,
             "benchmark": t == benchmark,
             "label": s.get("label"),
             "score": _num(s.get("score")),
-            "price": _num(s.get("price")) or _num(p.get("Price")),
+            "price": _num(q.get("price")) or _num(p.get("Price")) or _num(s.get("price")),
+            "change_pct": _num(q.get("change_pct")),
+            "live": bool(q),
             "shares": int(p.get("Shares", 0) or 0),
             "value": _num(p.get("Value")) or 0.0,
             "pl_pct": _num(p.get("Gain/loss %")),
@@ -153,6 +156,7 @@ def city_state(run: dict | None, live: dict | None, tickers: list[str], benchmar
     acct = (live or {}).get("account", {})
     return {
         "trades": trades(live),
+        "quotes_at": max((q["at"] for q in (live or {}).get("quotes", {}).values()), default=None) if live else None,
         "activity": activity(run, live),
         "run": {"at": run.get("run_at") if run else None, "mode": run.get("mode") if run else None},
         "market_open": bool(getattr((live or {}).get("clock"), "is_open", False)),

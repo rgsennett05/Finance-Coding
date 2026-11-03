@@ -31,3 +31,24 @@ def daily_bars(tickers: list[str], days: int = 400) -> dict[str, pd.DataFrame]:
             frame = df.xs(ticker, level=0)[["close", "volume"]].sort_index()
             out[ticker] = frame
     return out
+
+
+def live_quotes(tickers: list[str]) -> dict[str, dict]:
+    """Latest trade price for each ticker and today's change vs. yesterday's close (free IEX feed)."""
+    from alpaca.data.enums import DataFeed
+    from alpaca.data.requests import StockSnapshotRequest
+
+    snaps = data_client().get_stock_snapshot(StockSnapshotRequest(symbol_or_symbols=tickers, feed=DataFeed.IEX))
+    out = {}
+    for t, s in snaps.items():
+        if not s or not s.latest_trade:
+            continue
+        price = float(s.latest_trade.price)
+        prev = float(s.previous_daily_bar.close) if s.previous_daily_bar else None
+        out[t] = {
+            "price": price,
+            "prev_close": prev,
+            "change_pct": (price / prev - 1) if prev else None,
+            "at": s.latest_trade.timestamp.isoformat(),
+        }
+    return out
