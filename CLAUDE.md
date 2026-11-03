@@ -138,6 +138,31 @@ Clean design, onboarding, and docs so someone else could set it up with their ow
 Performance report vs. simply holding VOO over at least 3 months.
 **Done when:** a friend can install and run it from the README.
 
+### Stage 5 — The research firm (owner's long-term vision, recorded 2026-11-03)
+Starts only after Stages 3 and 4 are done.
+- **One goal for every agent:** maximize the owner's (shareholder's) wealth, measured as risk-adjusted
+  return vs. holding VOO. The Risk Manager's hard limits still apply; no agent can trade around them.
+- **A department for every criterion**, each with one exact, strict job (e.g. technicals, fundamentals,
+  valuation, macro, sector/industry, sentiment, insider & institutional flows, risk). Each department
+  does deep research daily on its criterion.
+- **Learn from the market's experts:** study what hedge funds and other experts are doing (SEC 13F
+  holdings, insider filings, analyst views, market data such as yfinance) and adjust accordingly.
+- **News Center:** a building that scans world events every day and briefs all departments.
+- **Daily meeting:** departments report, debate, and agree on how today's research serves the primary
+  goal; the minutes are shown in the city and on the dashboard.
+- **Presentations and charts:** clicking a department in the city opens its high-level briefing
+  (slides) and its charts.
+- **Portfolio Manager on the most capable Claude model** (above Opus; currently Claude Fable 5.1).
+  Requires an `ANTHROPIC_API_KEY` with paid credit.
+- **"Perfect" made measurable:** every agent has tests, a scorecard of its past calls vs. what actually
+  happened, and is judged by its contribution to returns vs. VOO. Agents that don't add value are
+  changed or removed.
+
+Notes to revisit before building: 13F data is quarterly and ~45 days late (it shows conviction, not
+timing); yfinance is an unofficial Yahoo scraper that can break, so it needs a fallback; daily deep
+research across many agents costs real money (rough guess $2–10/day, to be measured), so budgets and
+caching come first.
+
 ## Inspiration (study, borrow pieces, credit them)
 - https://github.com/virattt/ai-hedge-fund — investor-persona agents, risk + portfolio manager
 - https://github.com/tauricresearch/tradingagents — firm-style structure, bull/bear debate
