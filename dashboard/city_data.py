@@ -12,6 +12,7 @@ from pathlib import Path
 import pandas as pd
 
 TEMPLATE = Path(__file__).with_name("city.html")
+TAMPA_MAP = Path(__file__).with_name("tampa") / "tampa.json"   # built by dashboard/tampa/build.py from OpenStreetMap
 PENDING = {"accepted", "new", "pending new", "held", "partially filled", "accepted for bidding"}
 
 # Agents in the plan. Built ones light up; planned ones are outlines until Stage 3.
@@ -183,4 +184,5 @@ def city_state(run: dict | None, live: dict | None, tickers: list[str], benchmar
 def render(state: dict) -> str:
     """city.html with the state baked in (safe inside a <script> tag)."""
     data = json.dumps(state, default=str).replace("</", "<\\/")
-    return TEMPLATE.read_text().replace("/*__CITY_STATE__*/null", data)
+    tampa = TAMPA_MAP.read_text().replace("</", "<\\/")
+    return TEMPLATE.read_text().replace("/*__CITY_STATE__*/null", data).replace("/*__TAMPA__*/null", tampa)

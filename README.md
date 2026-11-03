@@ -75,9 +75,11 @@ Then open the address it prints (usually http://localhost:8501). Two pages:
 
 - **Overview** — live prices for the watchlist, portfolio value vs. VOO, open positions, recent
   orders, and what each agent decided in the latest run. Refreshes itself every minute.
-- **City** — a 3D city: each agent is a building, each stock a tower labeled with its live price and
-  today's change, surrounded by a living city whose sky follows the real time in New York and whose
-  streets get busier when the fund is. Refreshes every minute while the market is open. Press **▶ Replay
+- **City** — downtown Tampa in 3D, built from OpenStreetMap: the fund's agents work in real towers
+  (the Portfolio Manager in Bank of America Plaza, the Market Analyst in 100 North Tampa, the Risk
+  Manager in Rivergate Tower, the Fundamentals Analyst in Truist Place) and each stock is a glowing
+  pillar on the Riverwalk labeled with its live price. The sky follows the real time in New York and
+  the streets get busier when the fund is. Add `#lite` to the address on a slow device. Refreshes every minute while the market is open. Press **▶ Replay
   latest run** to watch signals, decisions and orders travel between buildings; past orders show as
   fading light trails. Drag to rotate, scroll to zoom, click a building for its reasoning. Needs an
   internet connection (it loads Three.js and two Google fonts).

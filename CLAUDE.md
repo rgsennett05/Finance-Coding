@@ -86,7 +86,7 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 ├── trading/         # order placement (paper only)
 ├── backtest/        # replays the real rules on past prices: python -m backtest.run
 ├── logs/            # decision + trade logs (Auditor writes here; not uploaded to GitHub)
-├── dashboard/       # Streamlit app: app.py (navigation), overview.py, city_page.py + city.html
+├── dashboard/       # Streamlit app: app.py (navigation), overview.py, city_page.py + city.html; tampa/ map data
 ├── .streamlit/      # Streamlit settings (no usage tracking, minimal toolbar)
 ├── .github/         # daily automatic run on GitHub Actions (history saved to the fund-history branch)
 └── tests/           # simple checks that things work (run: pytest)
@@ -179,6 +179,16 @@ them.
       Known gap: XOM's current SEC filer has no 10-K figures yet.
       In the city it's the Valuation Bank (columned portico, gold dome) on Research Row, and replays
       send a gold "fundamentals" pulse to Headquarters.
+- [x] The city is downtown Tampa (2026-11-03, owner's request: "look like Tampa"): real building
+      footprints and heights, streets, elevated expressways, the Hillsborough River, coastline and
+      parks from OpenStreetMap (`dashboard/tampa/tampa.json`, rebuilt with `dashboard/tampa/build.py`,
+      which needs `shapely`; ODbL — the City page shows the required credit). Agents occupy real
+      towers: Portfolio Manager = Bank of America Plaza, Market Analyst = 100 North Tampa, Risk
+      Manager = Rivergate Tower, Fundamentals = Truist Place; Stage 3 agents (cranes) = WFLA News
+      Channel 8 Studios, Park Tower, SkyPoint, Federal Courthouse. Stocks are glass "data pillars" on
+      the Riverwalk; cars drive the real streets, people walk sidewalks and the Riverwalk, palms and
+      oaks in parks and along streets. Not an exact replica: facades are generic and buildings with
+      no recorded height are estimated. `#lite` in the address turns shadows off on slow devices.
 **Done when:** the city runs live alongside a real paper-trading run.
 
 ### Stage 4 — Polish and share
