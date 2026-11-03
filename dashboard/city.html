@@ -110,6 +110,7 @@
 <div id="caption" class="hud">Drag to rotate · scroll or pinch to zoom · tap a building</div>
 <div id="legend" class="hud">
   <div><i style="background:var(--sig)"></i>Signals</div>
+  <div><i style="background:#c9a227"></i>Fundamentals</div>
   <div><i style="background:var(--prop)"></i>Proposed trades</div>
   <div><i style="background:var(--ord)"></i>Order sent ✓</div>
   <div><i style="background:var(--skip)"></i>Order waiting / skipped</div>
@@ -148,7 +149,7 @@ let seed = 20261102;
 const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
 const rr = (a, b) => a + (b - a) * rand();
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-const FLOW_COLORS = { signal: 0x2a78d6, proposal: 0x6250d6, order: 0x1baf7a, skipped: 0xd99a00, preview: 0x8b97a5, blocked: 0xe34948 };
+const FLOW_COLORS = { signal: 0x2a78d6, fundamentals: 0xc9a227, proposal: 0x6250d6, order: 0x1baf7a, skipped: 0xd99a00, preview: 0x8b97a5, blocked: 0xe34948 };
 
 $("pv").textContent = money(S.account.portfolio_value);
 $("cash").textContent = money(S.account.cash);
@@ -608,7 +609,26 @@ for (const a of S.agents) {
   register(a.id, g, "agent", a, Math.min(top * 0.4, 30), accents, label);
 }
 
-const planned = S.agents.filter((a) => a.status === "planned");
+// The back street holds every agent beyond the first three: real buildings once built, construction sites until then.
+const planned = S.agents.filter((a) => !BUILT[a.id]);
+const BACK_ROW = {
+  fundamentals(g) {   // Valuation Bank: a classical bank with a columned portico
+    const stone = new THREE.MeshStandardMaterial({ color: 0xe9e3d6, roughness: 0.55 });
+    const body = new THREE.Mesh(texturedBox(26, 22, 20, 0, 3, -2), agentMat); body.castShadow = body.receiveShadow = true; g.add(body);
+    const steps = new THREE.Mesh(new THREE.BoxGeometry(30, 3, 26), stone); steps.position.y = 1.5; steps.receiveShadow = true; g.add(steps);
+    for (let i = 0; i < 6; i++) {
+      const c = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1, 18, 16), stone);
+      c.position.set(-11 + i * 4.4, 12, 10); c.castShadow = true; g.add(c);
+    }
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(28, 2.4, 4), stone); lintel.position.set(0, 22.2, 10); g.add(lintel);
+    const tri = new THREE.Shape([new THREE.Vector2(-14.5, 0), new THREE.Vector2(14.5, 0), new THREE.Vector2(0, 5.5)]);
+    const pediment = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 4, bevelEnabled: false }), stone);
+    pediment.position.set(0, 23.4, 8); pediment.castShadow = true; g.add(pediment);
+    const gold = accentMat(0xc9a227);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(5, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), gold); dome.position.set(0, 25, -2); g.add(dome);
+    return { top: 31, accents: [gold] };
+  },
+};
 const ghostMat = new THREE.MeshStandardMaterial({ color: 0x9eb2c6, transparent: true, opacity: 0.18, depthWrite: false });
 const steelMat = new THREE.LineBasicMaterial({ color: 0xd99a00 });
 const craneMat = new THREE.MeshStandardMaterial({ color: 0xe0a21a, roughness: 0.6 });
@@ -616,6 +636,13 @@ planned.forEach((a, i) => {
   const x = (i - (planned.length - 1) / 2) * 46;
   const g = new THREE.Group(); g.position.set(x, 0.5, PLANNED_Z);
   plaza(x, PLANNED_Z, 34, 30);
+  if (a.status !== "planned" && BACK_ROW[a.id]) {
+    const { top, accents } = BACK_ROW[a.id](g);
+    const label = addLabel(g, `${esc(a.name)}<small>${esc(a.building)}</small>`, top + 6, "agent");
+    scene.add(g);
+    register(a.id, g, "agent", a, 14, accents, label);
+    return;
+  }
   const h = 30 + (i % 3) * 12;
   const ghost = new THREE.Mesh(new THREE.BoxGeometry(20, h, 18), ghostMat); ghost.position.y = h / 2; g.add(ghost);
   const frame = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(20, h, 18, 3, Math.round(h / 3.6), 3)), steelMat);
@@ -675,7 +702,7 @@ stocks.forEach((s, i) => {
 function sign(text, x, z) { const g = new THREE.Group(); g.position.set(x, 2, z); addLabel(g, text, 0, "sign"); scene.add(g); }
 sign("Agent Row", -122, AGENT_Z + 24);
 sign("Market District", -132, MARKET_Z + 6);
-sign("Stage 3 · under construction", -140, PLANNED_Z + 18);
+sign("Research Row · Stage 3", -140, PLANNED_Z + 18);
 sign("Exchange Park", 0, 118);
 
 // =====================================================================================
@@ -780,7 +807,7 @@ async function replay() {
   chime(0);
   await wait(1400);
   for (const step of S.flows) {
-    const icon = { signal: "📈", proposal: "🧠", order: "✅", skipped: "⏸", preview: "👁", blocked: "⛔" }[step.kind] || "•";
+    const icon = { signal: "📈", fundamentals: "🏦", proposal: "🧠", order: "✅", skipped: "⏸", preview: "👁", blocked: "⛔" }[step.kind] || "•";
     caption(`${icon} ${step.label}`);
     glowBuilding(step.from, 1);
     await new Promise((res) => launch(step, res));

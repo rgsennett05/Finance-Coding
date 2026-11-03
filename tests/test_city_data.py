@@ -79,3 +79,16 @@ def test_live_quotes_drive_tower_prices():
     assert s["quotes_at"] == "2026-11-03T15:00:00+00:00"
     voo = next(x for x in s["stocks"] if x["ticker"] == "VOO")
     assert voo["live"] is False and voo["price"] == 600.0      # falls back to the last signal price
+
+
+def test_fundamentals_building_and_flow():
+    run = dict(RUN, fundamentals=[
+        {"ticker": "AAA", "available": True, "score": 0.5, "label": "strong", "explanation": "Cheap and growing."},
+        {"ticker": "VOO", "available": False, "score": None, "label": "n/a", "reason": "A fund."},
+    ])
+    s = city_state(run, LIVE, ["AAA", "VOO"], "VOO")
+    fa = next(a for a in s["agents"] if a["id"] == "fundamentals")
+    assert fa["status"] == "active" and any("strong" in d for d in fa["details"])
+    assert ("fundamentals", "portfolio_manager", "fundamentals") in [(f["from"], f["to"], f["kind"]) for f in s["flows"]]
+    # A run from before the analyst existed: the building is there but idle.
+    assert next(a for a in city_state(RUN, LIVE, ["AAA"], "VOO")["agents"] if a["id"] == "fundamentals")["status"] == "idle"

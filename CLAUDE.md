@@ -175,6 +175,8 @@ them.
       margin/FCF/debt; funds (VOO) are skipped; reports older than ~18 months aren't judged. Runs in
       the daily loop as advisory only — wiring it into the Portfolio Manager's rules is the owner's
       decision and the next step. Known gap: XOM's current SEC filer has no 10-K figures yet.
+      In the city it's the Valuation Bank (columned portico, gold dome) on Research Row, and replays
+      send a gold "fundamentals" pulse to Headquarters.
 **Done when:** the city runs live alongside a real paper-trading run.
 
 ### Stage 4 — Polish and share

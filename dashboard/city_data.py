@@ -19,7 +19,7 @@ AGENTS = [
     ("market_analyst", "Market Analyst", "Analyst Tower", "Reads prices and calculates trend, momentum, RSI and volatility.", True),
     ("portfolio_manager", "Portfolio Manager", "Headquarters", "Weighs the signals and decides buy, sell or hold.", True),
     ("risk_manager", "Risk Manager", "Risk Fortress", "Plain-code limits: sizes every trade, adds stop-losses, can veto.", True),
-    ("fundamentals", "Fundamentals Analyst", "Valuation Bank", "Earnings, valuation and company health.", False),
+    ("fundamentals", "Fundamentals Analyst", "Valuation Bank", "Reads company annual reports from the SEC: valuation, growth, profitability, debt.", True),
     ("news", "News/Sentiment Analyst", "Newsroom", "Recent news and market mood.", False),
     ("bull", "Bull Researcher", "Bull Hall", "Strongest case FOR a trade.", False),
     ("bear", "Bear Researcher", "Bear Hall", "Strongest case AGAINST a trade.", False),
@@ -41,7 +41,11 @@ def agent_details(run: dict | None) -> dict[str, list[str]]:
         return {}
     signals = sorted(run.get("signals", []), key=lambda s: -s.get("score", 0))
     risk = run.get("risk_review", [])
+    funds = run.get("fundamentals")
     out = {
+        "fundamentals": (["Advisory: reported, not yet used in decisions."] +
+                         [f"{f['ticker']}: {f['label']} (score {f['score']:+.2f}) — {f['explanation']}" if f["available"] and f.get("score") is not None
+                          else f"{f['ticker']}: {f['reason']}" for f in funds]) if funds is not None else ["Didn't run in this run."],
         "market_analyst": [f"{s['ticker']}: {s['label']} (score {s['score']:+.2f}) — {s.get('explanation', '')}" for s in signals],
         "portfolio_manager": [f"{d['ticker']}: {d['reason']}" for d in run.get("decisions", [])],
         "risk_manager": [],
@@ -69,6 +73,10 @@ def flows(run: dict | None) -> list[dict]:
     proposals = [d for d in run.get("decisions", []) if d.get("action") in ("buy", "sell")]
     steps.append({"from": "market_analyst", "to": "portfolio_manager", "kind": "signal",
                   "label": f"{n_sig} signals"})
+    funds = [f for f in run.get("fundamentals") or [] if f.get("available")]
+    if funds:
+        steps.append({"from": "fundamentals", "to": "portfolio_manager", "kind": "fundamentals",
+                      "label": f"Fundamentals on {len(funds)} companies (advisory)"})
     if proposals:
         steps.append({"from": "portfolio_manager", "to": "risk_manager", "kind": "proposal",
                       "label": f"{len(proposals)} proposed trade(s)"})
@@ -163,7 +171,7 @@ def city_state(run: dict | None, live: dict | None, tickers: list[str], benchmar
         "account": {k: _num(v) for k, v in acct.items()},
         "agents": [
             {"id": a, "name": n, "building": b, "role": role,
-             "status": ("active" if ran else "idle") if built else "planned",
+             "status": ("active" if ran and (a != "fundamentals" or run.get("fundamentals") is not None) else "idle") if built else "planned",
              "details": details.get(a, []) if built else ["Planned for Stage 3."]}
             for a, n, b, role, built in AGENTS
         ],
