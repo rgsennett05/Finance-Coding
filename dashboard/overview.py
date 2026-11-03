@@ -38,6 +38,8 @@ def page():
     last = (f"Last run: {run['run_at'][:16].replace('T', ' ')} UTC "
             f"({'preview only, no orders' if run['mode'] == 'dry-run' else 'paper trades'})") if run else "No runs logged yet"
     st.caption(f"Paper account (fake money) · {status} · {last}")
+    for alert in (run or {}).get("alerts", []):
+        st.error(f"🚨 {alert}")
 
     # --------------------------------------------------------------------------
     # Headline numbers

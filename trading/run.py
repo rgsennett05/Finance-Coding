@@ -12,7 +12,7 @@ import sys
 from agents import market_analyst, portfolio_manager, risk_manager
 from config.settings import load_settings
 from data.broker import LiveKeyError, trading_client
-from trading import journal, orders, stops
+from trading import alerts, journal, orders, stops
 from trading.portfolio import from_alpaca
 
 
@@ -82,6 +82,9 @@ def main(argv: list[str] | None = None) -> int:
     if not stop_actions:
         print("   No positions to protect yet.")
 
+    found = alerts.find(results, stop_actions, client=client, dry_run=dry_run)
+    alerts.report(found)
+
     path = journal.write({
         "mode": "dry-run" if dry_run else "paper",
         "market_open": clock.is_open,
@@ -93,10 +96,10 @@ def main(argv: list[str] | None = None) -> int:
         "orders": results,
         "trims": trims,
         "stop_maintenance": stop_actions,
+        "alerts": found,
     })
     print(f"\n📝 Logged to {path.relative_to(path.parent.parent)}")
-    failed = any(o.status == "failed" for o in results) or any(a.status == "failed" for a in stop_actions)
-    return 1 if failed else 0
+    return 1 if found else 0
 
 
 if __name__ == "__main__":

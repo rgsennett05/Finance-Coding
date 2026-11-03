@@ -5,8 +5,12 @@
 #   ALPACA_SECRET_KEY   your Alpaca PAPER secret
 #   ANTHROPIC_API_KEY   optional — not used while the Portfolio Manager is in rules mode
 #
-# Each run's log (every agent's reasoning) is attached to the run as "fund-logs"
-# for 90 days. Logs are not committed to the repository.
+# Run history: every run's log is saved permanently on the `fund-history` branch (one JSON file
+# per run). The run loads that history first, so the agents and the dashboard see every past day.
+# On your computer, `python -m trading.history` downloads it into logs/.
+#
+# Alerts: the run ends in a red ✕ — and GitHub emails you — if an order is rejected, an order or
+# stop-loss change fails, or any position is left without a stop-loss.
 name: Daily fund run
 
 on:
@@ -16,7 +20,7 @@ on:
   workflow_dispatch:          # "Run workflow" button in the Actions tab
 
 permissions:
-  contents: read
+  contents: write             # needed to save the run log to the fund-history branch
 
 concurrency:
   group: daily-fund-run
@@ -35,16 +39,37 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Run the checks
         run: pytest -q
+
+      - name: Load run history
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code --heads "$url" fund-history >/dev/null; then
+            git clone --quiet --branch fund-history --single-branch --depth 1 "$url" history
+          else
+            mkdir history && git -C history init --quiet -b fund-history && git -C history remote add origin "$url"
+          fi
+          mkdir -p logs
+          cp history/run_*.json logs/ 2>/dev/null || true
+          echo "Loaded $(ls logs/run_*.json 2>/dev/null | wc -l) past runs"
+
       - name: Run the fund (paper trading)
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python -m trading.run --yes
-      - uses: actions/upload-artifact@v4
+
+      - name: Save run history
         if: always()
-        with:
-          name: fund-logs
-          path: logs/run_*.json
-          retention-days: 90
-          if-no-files-found: ignore
+        run: |
+          cp logs/run_*.json history/ 2>/dev/null || { echo "No run log to save"; exit 0; }
+          cd history
+          git config user.name "trading-city[bot]"
+          git config user.email "trading-city@users.noreply.github.com"
+          git add run_*.json
+          if git diff --cached --quiet; then echo "Nothing new to save"; exit 0; fi
+          git commit --quiet -m "Run log $(date -u +%F)"
+          git push --quiet origin fund-history
+          echo "Saved $(ls run_*.json | wc -l) runs to the fund-history branch"

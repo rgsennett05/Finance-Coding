@@ -88,7 +88,7 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 ├── logs/            # decision + trade logs (Auditor writes here; not uploaded to GitHub)
 ├── dashboard/       # Streamlit app: app.py (navigation), overview.py, city_page.py + city.html
 ├── .streamlit/      # Streamlit settings (no usage tracking, minimal toolbar)
-├── .github/         # daily automatic run on GitHub Actions
+├── .github/         # daily automatic run on GitHub Actions (history saved to the fund-history branch)
 └── tests/           # simple checks that things work (run: pytest)
 ```
 
@@ -131,7 +131,12 @@ agent's reasoning for the latest run.
       `#eb6834`); the chart waits for 2+ days of history rather than drawing a misleading line.
 - [ ] Owner opens it and confirms they understand what happened today (needs filled positions)
 - [x] Daily automatic run — `.github/workflows/daily-run.yml`, weekdays 15:07 UTC (10:07am ET winter,
-      11:07am ET summer). Runs `pytest` first; logs attached to each run as `fund-logs` for 90 days.
+      11:07am ET summer). Runs `pytest` first. Every run log is saved permanently on the
+      `fund-history` branch (loaded into `logs/` before each run; `python -m trading.history`
+      downloads it locally). The repo is public, so this paper-account history is public too.
+- [x] Alerts (`trading/alerts.py`): a failed or rejected order, a failed stop change, or a position
+      with no stop-loss ends the run with an error (red ✕ on GitHub → email) and shows as a red
+      banner on the dashboard.
 
 **Done when:** I can open it in a browser and understand what happened today.
 

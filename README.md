@@ -50,8 +50,17 @@ python -m agents.portfolio_manager  # dry run: buy/sell/hold decisions + risk re
 
 GitHub runs the fund every weekday at 10:07am New York time (11:07am in summer) — your computer can
 be off. One-time setup: in the repo, **Settings → Secrets and variables → Actions → New repository
-secret**, add `ALPACA_API_KEY` and `ALPACA_SECRET_KEY` (your paper keys). Each run's log is attached
-to the run in the **Actions** tab as `fund-logs`.
+secret**, add `ALPACA_API_KEY` and `ALPACA_SECRET_KEY` (your paper keys).
+
+Every run's log is saved permanently on the `fund-history` branch. To copy that history to your
+computer so the dashboard shows every day:
+
+```bash
+python -m trading.history
+```
+
+If an order is rejected, a step fails, or a stock is left without a stop-loss, the run ends with a
+red ✕ in the **Actions** tab (GitHub emails you) and the dashboard shows a red alert banner.
 
 ## The dashboard
 
