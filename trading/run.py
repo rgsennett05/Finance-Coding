@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from agents import market_analyst, portfolio_manager, risk_manager
+from agents import fundamentals_analyst, market_analyst, portfolio_manager, risk_manager
 from config.settings import load_settings
 from data.broker import LiveKeyError, trading_client
 from trading import alerts, journal, orders, stops
@@ -41,6 +41,15 @@ def main(argv: list[str] | None = None) -> int:
     signals = market_analyst.run(settings.tickers)
     for s in sorted(signals, key=lambda s: -s.score):
         print(f"   {s.ticker:<6} {s.label:<8} score {s.score:+.2f}")
+
+    print("\n🏦 Fundamentals Analyst (advisory — reported, not yet used in decisions)")
+    try:
+        fundamentals = fundamentals_analyst.run(settings.tickers, {s.ticker: s.price for s in signals}, skip={settings.benchmark})
+    except Exception as err:   # advisory agent: a data problem must never stop trading
+        fundamentals = []
+        print(f"   Skipped: {type(err).__name__}: {err}")
+    for f in fundamentals:
+        print(f"   {f.ticker:<6} " + (f"{f.label:<8} score {f.score:+.2f}" if f.available and f.score is not None else f"— {f.reason}"))
 
     print("\n🧠 Portfolio Manager")
     decisions = portfolio_manager.decide(signals, portfolio, settings)
@@ -91,6 +100,7 @@ def main(argv: list[str] | None = None) -> int:
         "settings": settings,
         "portfolio_before": portfolio,
         "signals": signals,
+        "fundamentals": fundamentals,
         "decisions": decisions,
         "risk_review": [{**r.__dict__, "value": r.value} for r in reviewed],
         "orders": results,

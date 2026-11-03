@@ -175,6 +175,26 @@ def page():
                     st.markdown(f"**{s['ticker']}** — {s['explanation']}  \n<small>explained by {s['explained_by']}</small>",
                                 unsafe_allow_html=True)
 
+        with st.expander("🏦 Fundamentals Analyst — healthy, reasonably priced businesses? (advisory)", expanded=False):
+            funds = run.get("fundamentals")
+            if funds is None:
+                st.write("This run happened before the Fundamentals Analyst existed.")
+            else:
+                rows = [{
+                    "Stock": f["ticker"], "Fundamentals": f["label"], "Score": f["score"], "P/E": f["pe"],
+                    "FCF yield": f["fcf_yield"], "Revenue growth": f["revenue_growth"],
+                    "Operating margin": f["operating_margin"], "ROE": f["roe"], "Debt/equity": f["debt_to_equity"],
+                } for f in funds if f["available"]]
+                if rows:
+                    st.dataframe(pd.DataFrame(rows).style.format({
+                        "Score": "{:+.2f}", "P/E": "{:.0f}", "FCF yield": "{:.1%}", "Revenue growth": "{:+.0%}",
+                        "Operating margin": "{:.0%}", "ROE": "{:.0%}", "Debt/equity": "{:.1f}"}, na_rep="—"),
+                        hide_index=True, width="stretch",
+                        column_config=helps("Fundamentals", "Score", "P/E", "FCF yield", "Revenue growth", "Operating margin", "ROE", "Debt/equity"))
+                for f in funds:
+                    st.markdown(f"**{f['ticker']}** — {f['explanation'] if f['available'] else f['reason']}")
+                st.caption("Advisory for now: the Portfolio Manager doesn't act on these yet. Source: each company's latest annual report (10-K) via the SEC.")
+
         with st.expander("🧠 Portfolio Manager — buy, sell or hold", expanded=True):
             icon = {"buy": "🟢", "sell": "🔴", "hold": "⚪"}
             for dec in run.get("decisions", []):

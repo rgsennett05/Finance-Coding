@@ -26,6 +26,13 @@ GLOSSARY = {
     "Sharpe ratio": "Return per unit of risk (volatility). Higher is better; around 1 is good.",
     "Trim": "Selling part of a position that grew too big, to bring it back to the 10% limit.",
     "Cool-down": "After a stop-loss sells a stock, the fund waits 7 days before it may buy it again.",
+    "Fundamentals": "The Fundamentals Analyst's verdict on the business itself: strong, average or weak.",
+    "P/E": "Price ÷ earnings per share. How many years of current profit you pay for. Lower is cheaper; above ~30 is expensive.",
+    "FCF yield": "Free cash flow (cash from operations minus spending on equipment) ÷ the company's market value. Higher is cheaper.",
+    "Revenue growth": "How much sales grew in the latest fiscal year vs. the year before.",
+    "Operating margin": "Profit from operations ÷ sales. How much of each dollar of sales is kept before interest and taxes.",
+    "ROE": "Return on equity: profit ÷ shareholders' equity. How hard the owners' money works. Very high values can come from buybacks.",
+    "Debt/equity": "Total debt ÷ shareholders' equity. Lower means less borrowed money; banks are not judged on this.",
     "Paper trading": "Practice trading with fake money on a real market. Nothing here uses real money.",
 }
 

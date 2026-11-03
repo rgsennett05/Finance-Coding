@@ -3,6 +3,7 @@
 # One-time setup: repo Settings → Secrets and variables → Actions → New repository secret
 #   ALPACA_API_KEY      your Alpaca PAPER key (starts with PK)
 #   ALPACA_SECRET_KEY   your Alpaca PAPER secret
+#   SEC_USER_AGENT      a name + contact email for the SEC's free company data (Fundamentals Analyst)
 #   ANTHROPIC_API_KEY   optional — not used while the Portfolio Manager is in rules mode
 #
 # Run history: every run's log is saved permanently on the `fund-history` branch (one JSON file
@@ -58,6 +59,7 @@ jobs:
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python -m trading.run --yes
 

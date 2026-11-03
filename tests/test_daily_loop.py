@@ -139,6 +139,7 @@ def world(monkeypatch, tmp_path):
     real_write = journal.write
     monkeypatch.setattr(journal, "write", lambda record: real_write(record, tmp_path))
     monkeypatch.setattr(alerts.time, "sleep", lambda s: None)
+    monkeypatch.setattr("data.sec.cik_for", lambda t: None)      # no SEC calls in tests
     return NS(broker=broker, signal_price=signal_price, logs=tmp_path)
 
 

@@ -50,7 +50,7 @@ Agents explain their reasoning in plain language so it can be shown on the dashb
 | Agent | Job | How |
 |---|---|---|
 | Market Analyst | Pulls price/volume data and technical signals | Code computes signals; model explains them |
-| Fundamentals Analyst | Earnings, valuation, company health | Stage 3 |
+| Fundamentals Analyst | Earnings, valuation, company health | Code scores SEC annual-report data (`agents/fundamentals_analyst.py`); **advisory** — logged and shown, not yet used in decisions |
 | News/Sentiment Analyst | Summarizes recent news and market mood | Stage 3 |
 | Bull Researcher | Strongest case FOR a trade | Stage 3 |
 | Bear Researcher | Strongest case AGAINST a trade | Stage 3 |
@@ -168,6 +168,13 @@ them.
       don't, five materials incl. brick and dark steel), reflections from a copy of the real sky,
       podium + tower / stepped forms, parapets, water tanks, antennas, glowing street-level lobbies,
       per-building tint and ground-level shading.
+- [x] Fundamentals Analyst (2026-11-03, started while Stage 2 waits on fills): reads each company's
+      latest 10-K from the SEC's free XBRL data (`data/sec.py`, needs `SEC_USER_AGENT` with a contact
+      email) plus the live price; scores valuation (P/E, FCF yield), growth (revenue), profitability
+      (operating margin, ROE) and health (debt/equity) from −1 to +1 → strong/average/weak. Banks skip
+      margin/FCF/debt; funds (VOO) are skipped; reports older than ~18 months aren't judged. Runs in
+      the daily loop as advisory only — wiring it into the Portfolio Manager's rules is the owner's
+      decision and the next step. Known gap: XOM's current SEC filer has no 10-K figures yet.
 **Done when:** the city runs live alongside a real paper-trading run.
 
 ### Stage 4 — Polish and share

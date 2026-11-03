@@ -27,6 +27,7 @@ python -m data.broker            # confirms your Alpaca paper account connects
 | Key | What for | Where to get it |
 |---|---|---|
 | `ALPACA_API_KEY`, `ALPACA_SECRET_KEY` | Market data and paper trades | [alpaca.markets](https://alpaca.markets) → switch to **Paper Trading** → API Keys. Paper keys start with `PK`. |
+| `SEC_USER_AGENT` | Company financials for the Fundamentals Analyst. The SEC requires a name and contact email, e.g. `TradingCity Jane Doe jane@example.com` | You choose it |
 | `ANTHROPIC_API_KEY` | The AI agents | [console.anthropic.com](https://console.anthropic.com) → API Keys |
 
 ## Running the fund
@@ -42,6 +43,7 @@ Each agent can also be run on its own:
 
 ```bash
 python -m agents.market_analyst   # technical signals + plain-English read for each ticker
+python -m agents.fundamentals_analyst  # valuation, growth, profitability and debt from SEC filings
 python -m agents.risk_manager     # dry run: what the risk limits would allow (no orders placed)
 python -m agents.portfolio_manager  # dry run: buy/sell/hold decisions + risk review (no orders placed)
 ```

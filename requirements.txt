@@ -4,3 +4,4 @@ anthropic==2.4.0        # Claude API for the agents
 python-dotenv==1.2.4    # reads API keys from .env
 pytest==9.2.0           # runs the checks in tests/
 streamlit==1.66.1      # the dashboard web page
+requests==2.34.2       # web requests (SEC company data)
