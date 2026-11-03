@@ -162,6 +162,12 @@ them.
       price strip in the city, and a "Live prices" table on the Overview. The Overview refreshes every
       minute; the City page every minute while the market is open (10 minutes when closed) and keeps
       the viewer's camera across refreshes. The backtest is kept but not run by default.
+- [x] City quality pass (2026-11-03): street flicker fixed (logarithmic depth buffer, ground layers at
+      distinct heights with polygon offset, merged per layer, no overlapping road segments);
+      sharper facades (frames, floor slabs, glass with roughness maps so glass reflects and frames
+      don't, five materials incl. brick and dark steel), reflections from a copy of the real sky,
+      podium + tower / stepped forms, parapets, water tanks, antennas, glowing street-level lobbies,
+      per-building tint and ground-level shading.
 **Done when:** the city runs live alongside a real paper-trading run.
 
 ### Stage 4 — Polish and share
