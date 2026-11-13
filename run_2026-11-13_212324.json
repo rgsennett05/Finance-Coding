@@ -1,0 +1,462 @@
+{
+  "run_at": "2026-11-13T21:23:24.083323+00:00",
+  "mode": "paper",
+  "market_open": false,
+  "settings": {
+    "tickers": [
+      "AAPL",
+      "MSFT",
+      "NVDA",
+      "JPM",
+      "KO",
+      "XOM",
+      "VOO"
+    ],
+    "benchmark": "VOO",
+    "risk": {
+      "max_position_pct": 0.1,
+      "min_cash_pct": 0.1,
+      "max_open_positions": 10,
+      "stop_loss_pct": 0.08,
+      "trim_buffer_pct": 0.01,
+      "cooldown_days": 7
+    },
+    "routine_model": "claude-haiku-5-5",
+    "portfolio_manager_model": "claude-opus-5-5",
+    "portfolio_manager_mode": "rules",
+    "market_weight": 0.6,
+    "fundamentals_weight": 0.4,
+    "buy_above": 0.33,
+    "sell_below": -0.33
+  },
+  "portfolio_before": {
+    "portfolio_value": 99607.08,
+    "cash": 49067.06,
+    "positions": {
+      "AAPL": {
+        "ticker": "AAPL",
+        "qty": 29,
+        "market_value": 10312.4,
+        "avg_entry": 328.826552
+      },
+      "JPM": {
+        "ticker": "JPM",
+        "qty": 28,
+        "market_value": 9675.12,
+        "avg_entry": 358.878571
+      },
+      "KO": {
+        "ticker": "KO",
+        "qty": 104,
+        "market_value": 10329.28,
+        "avg_entry": 94.87
+      },
+      "MSFT": {
+        "ticker": "MSFT",
+        "qty": 19,
+        "market_value": 9918.0,
+        "avg_entry": 522.46
+      },
+      "XOM": {
+        "ticker": "XOM",
+        "qty": 60,
+        "market_value": 10305.216,
+        "avg_entry": 165.273333
+      }
+    },
+    "pending_buys": {},
+    "recently_stopped": {}
+  },
+  "signals": [
+    {
+      "ticker": "AAPL",
+      "price": 356.4,
+      "sma50": 339.07200000000006,
+      "sma200": 301.23715000000004,
+      "return_1m": 0.04237957357199251,
+      "return_3m": 0.1660205133238455,
+      "momentum_12_1": 0.25026511134676555,
+      "rsi14": 60.632445593692125,
+      "volatility": 0.2480633083076645,
+      "volume_ratio": 0.9753161273002682,
+      "trend_score": 1.0,
+      "momentum_score": 0.8342170378225519,
+      "rsi_score": 0.0,
+      "score": 0.825,
+      "label": "bullish",
+      "explanation": "Price $356.40 is above its 50- and 200-day averages, an uptrend. Over the past year (excluding the last month) it moved +25.0%, and +4.2% in the last month. RSI 61 is in the normal range. Signal: bullish.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "MSFT",
+      "price": 524.19,
+      "sma50": 519.0317,
+      "sma200": 441.410725,
+      "return_1m": -0.02812592702462169,
+      "return_3m": 0.09058566524498102,
+      "momentum_12_1": 0.05479719951499984,
+      "rsi14": 48.94317601948274,
+      "volatility": 0.33945031906761775,
+      "volume_ratio": 1.2252974726119388,
+      "trend_score": 1.0,
+      "momentum_score": 0.18265733171666615,
+      "rsi_score": 0.0,
+      "score": 0.532,
+      "label": "bullish",
+      "explanation": "Price $524.19 is above its 50- and 200-day averages, an uptrend. Over the past year (excluding the last month) it moved +5.5%, and -2.8% in the last month. RSI 49 is in the normal range. Signal: bullish.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "NVDA",
+      "price": 162.84,
+      "sma50": 214.65730000000002,
+      "sma200": 204.18619999999999,
+      "return_1m": -0.2507247043666314,
+      "return_3m": -0.2765881830297645,
+      "momentum_12_1": 0.12106674920045402,
+      "rsi14": 24.850915484703904,
+      "volatility": 0.38759805549125287,
+      "volume_ratio": 5.321973904338033,
+      "trend_score": -1.0,
+      "momentum_score": 0.40355583066818007,
+      "rsi_score": 0.5,
+      "score": -0.168,
+      "label": "neutral",
+      "explanation": "Price $162.84 is below its 50- and 200-day averages, a downtrend. Over the past year (excluding the last month) it moved +12.1%, and -25.1% in the last month. RSI 25 is oversold (below 30). Signal: neutral.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "JPM",
+      "price": 346.265,
+      "sma50": 340.43489999999997,
+      "sma200": 324.86565,
+      "return_1m": 0.032024916547448656,
+      "return_3m": -0.041109357259560886,
+      "momentum_12_1": 0.04712564758754123,
+      "rsi14": 56.13316093115926,
+      "volatility": 0.22914497662670247,
+      "volume_ratio": 0.7393535971773122,
+      "trend_score": 1.0,
+      "momentum_score": 0.15708549195847077,
+      "rsi_score": 0.0,
+      "score": 0.521,
+      "label": "bullish",
+      "explanation": "Price $346.26 is above its 50- and 200-day averages, an uptrend. Over the past year (excluding the last month) it moved +4.7%, and +3.2% in the last month. RSI 56 is in the normal range. Signal: bullish.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "KO",
+      "price": 99.25,
+      "sma50": 90.8238,
+      "sma200": 83.357125,
+      "return_1m": 0.08003699874857184,
+      "return_3m": 0.14093573974020002,
+      "momentum_12_1": 0.2843466107617052,
+      "rsi14": 73.17660270122222,
+      "volatility": 0.19018199906228642,
+      "volume_ratio": 1.0283272777761752,
+      "trend_score": 1.0,
+      "momentum_score": 0.9478220358723507,
+      "rsi_score": -0.5,
+      "score": 0.777,
+      "label": "bullish",
+      "explanation": "Price $99.25 is above its 50- and 200-day averages, an uptrend. Over the past year (excluding the last month) it moved +28.4%, and +8.0% in the last month. RSI 73 is overbought (above 70). Signal: bullish.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "XOM",
+      "price": 170.61,
+      "sma50": 169.3836,
+      "sma200": 156.360075,
+      "return_1m": -0.02355129489197294,
+      "return_3m": 0.05621246827214765,
+      "momentum_12_1": 0.47896563399356684,
+      "rsi14": 48.24979959184626,
+      "volatility": 0.27096681409123335,
+      "volume_ratio": 1.2904832308402592,
+      "trend_score": 1.0,
+      "momentum_score": 1.0,
+      "rsi_score": 0.0,
+      "score": 0.9,
+      "label": "bullish",
+      "explanation": "Price $170.61 is above its 50- and 200-day averages, an uptrend. Over the past year (excluding the last month) it moved +47.9%, and -2.4% in the last month. RSI 48 is in the normal range. Signal: bullish.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "VOO",
+      "price": 693.05,
+      "sma50": 702.8510000000001,
+      "sma200": 672.975825,
+      "return_1m": -0.023006329560032235,
+      "return_3m": -0.024271776316715732,
+      "momentum_12_1": 0.12910260083404967,
+      "rsi14": 46.851680916481236,
+      "volatility": 0.1373983847491327,
+      "volume_ratio": 0.8911518948453602,
+      "trend_score": 0.0,
+      "momentum_score": 0.4303420027801656,
+      "rsi_score": 0.0,
+      "score": 0.194,
+      "label": "neutral",
+      "explanation": "Price $693.05 sits between its 50- and 200-day averages, a mixed trend. Over the past year (excluding the last month) it moved +12.9%, and -2.3% in the last month. RSI 47 is in the normal range. Signal: neutral.",
+      "explained_by": "rules (no AI key set)"
+    }
+  ],
+  "fundamentals": [
+    {
+      "ticker": "AAPL",
+      "available": true,
+      "reason": "",
+      "company": "Apple Inc.",
+      "fiscal_year_end": "2026-09-26",
+      "is_bank": false,
+      "price": 356.4,
+      "pe": 39.68819599109131,
+      "fcf_yield": 0.02626934081549775,
+      "revenue_growth": 0.1505979656911629,
+      "operating_margin": 0.3300997840587761,
+      "roe": 1.17915480895328,
+      "debt_to_equity": 0.6968677794331493,
+      "scores": {
+        "valuation": -0.5706850130952077,
+        "growth": 1.0,
+        "profitability": 1.0,
+        "health": 0.533096730078648
+      },
+      "score": 0.491,
+      "label": "strong",
+      "explanation": "P/E 40 (expensive), free-cash-flow yield 2.6%, revenue +15% last fiscal year, operating margin 33%, return on equity 118%, debt 0.7\u00d7 equity (fiscal year ending 2026-09-26). Fundamentals: strong.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "MSFT",
+      "available": true,
+      "reason": "",
+      "company": "MICROSOFT CORP",
+      "fiscal_year_end": "2026-06-30",
+      "is_bank": false,
+      "price": 524.19,
+      "pe": 29.20278551532034,
+      "fcf_yield": 0.017208201154759854,
+      "revenue_growth": 0.17788686799846665,
+      "operating_margin": 0.4678081840892722,
+      "roe": 0.30233483352811,
+      "debt_to_equity": 0.09108314665666034,
+      "scores": {
+        "valuation": -0.5709698024260835,
+        "growth": 1.0,
+        "profitability": 1.0,
+        "health": 1.0
+      },
+      "score": 0.607,
+      "label": "strong",
+      "explanation": "P/E 29 (fairly priced), free-cash-flow yield 1.7%, revenue +18% last fiscal year, operating margin 47%, return on equity 30%, debt 0.1\u00d7 equity (fiscal year ending 2026-06-30). Fundamentals: strong.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "NVDA",
+      "available": true,
+      "reason": "",
+      "company": "NVIDIA CORP",
+      "fiscal_year_end": "2026-01-25",
+      "is_bank": false,
+      "price": 162.84,
+      "pe": 33.23265306122449,
+      "fcf_yield": 0.024634317625630536,
+      "revenue_growth": 0.6547353579009478,
+      "operating_margin": 0.6038168363141272,
+      "roe": 0.7633333969089534,
+      "debt_to_equity": 0.05383583503398117,
+      "scores": {
+        "valuation": -0.5054959122871927,
+        "growth": 1.0,
+        "profitability": 1.0,
+        "health": 1.0
+      },
+      "score": 0.624,
+      "label": "strong",
+      "explanation": "P/E 33 (expensive), free-cash-flow yield 2.5%, revenue +65% last fiscal year, operating margin 60%, return on equity 76%, debt 0.1\u00d7 equity (fiscal year ending 2026-01-25). Fundamentals: strong.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "JPM",
+      "available": true,
+      "reason": "",
+      "company": "JPMORGAN CHASE & CO",
+      "fiscal_year_end": "2025-12-31",
+      "is_bank": true,
+      "price": 346.265,
+      "pe": 17.295954045954044,
+      "fcf_yield": null,
+      "revenue_growth": 0.027546238933068956,
+      "operating_margin": null,
+      "roe": 0.1574007140531622,
+      "debt_to_equity": null,
+      "scores": {
+        "valuation": 0.5126795951077932,
+        "growth": -0.22453761066931044,
+        "profitability": 0.07400714053162183,
+        "health": null
+      },
+      "score": 0.121,
+      "label": "average",
+      "explanation": "P/E 17 (fairly priced), revenue +3% last fiscal year, return on equity 16% (fiscal year ending 2025-12-31). Bank: margin, cash-flow and debt measures don't apply, so it's judged on price, growth and return on equity. Fundamentals: average.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "KO",
+      "available": true,
+      "reason": "",
+      "company": "COCA COLA CO",
+      "fiscal_year_end": "2025-12-31",
+      "is_bank": false,
+      "price": 99.25,
+      "pe": 32.64802631578947,
+      "fcf_yield": 0.012403861677007367,
+      "revenue_growth": 0.018699135164998548,
+      "operating_margin": 0.28706117936630443,
+      "roe": 0.4074419472162641,
+      "debt_to_equity": 1.1659361497093474,
+      "scores": {
+        "valuation": -0.7393283080215655,
+        "growth": -0.3130086483500145,
+        "profitability": 0.9482447174652178,
+        "health": -0.018748411422761624
+      },
+      "score": -0.031,
+      "label": "average",
+      "explanation": "P/E 33 (expensive), free-cash-flow yield 1.2%, revenue +2% last fiscal year, operating margin 29%, return on equity 41%, debt 1.2\u00d7 equity (fiscal year ending 2025-12-31). Fundamentals: average.",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "XOM",
+      "available": false,
+      "reason": "No annual report (10-K) figures found in the SEC data.",
+      "company": "ExxonMobil Holdings Corporation",
+      "fiscal_year_end": null,
+      "is_bank": false,
+      "price": null,
+      "pe": null,
+      "fcf_yield": null,
+      "revenue_growth": null,
+      "operating_margin": null,
+      "roe": null,
+      "debt_to_equity": null,
+      "scores": {},
+      "score": null,
+      "label": "n/a",
+      "explanation": "",
+      "explained_by": "rules (no AI key set)"
+    },
+    {
+      "ticker": "VOO",
+      "available": false,
+      "reason": "A fund that tracks an index, not a company, so there are no company fundamentals.",
+      "company": "",
+      "fiscal_year_end": null,
+      "is_bank": false,
+      "price": null,
+      "pe": null,
+      "fcf_yield": null,
+      "revenue_growth": null,
+      "operating_margin": null,
+      "roe": null,
+      "debt_to_equity": null,
+      "scores": {},
+      "score": null,
+      "label": "n/a",
+      "explanation": "",
+      "explained_by": "rules (no AI key set)"
+    }
+  ],
+  "decisions": [
+    {
+      "ticker": "XOM",
+      "action": "hold",
+      "reason": "HOLD: blended score +0.90 (market +0.90 only; no fundamentals available); we own it and it's above the sell level.",
+      "proposal": null
+    },
+    {
+      "ticker": "AAPL",
+      "action": "hold",
+      "reason": "HOLD: blended score +0.69 = market +0.82 \u00d7 60% + fundamentals +0.49 \u00d7 40%; we own it and it's above the sell level.",
+      "proposal": null
+    },
+    {
+      "ticker": "MSFT",
+      "action": "hold",
+      "reason": "HOLD: blended score +0.56 = market +0.53 \u00d7 60% + fundamentals +0.61 \u00d7 40%; we own it and it's above the sell level.",
+      "proposal": null
+    },
+    {
+      "ticker": "KO",
+      "action": "hold",
+      "reason": "HOLD: blended score +0.45 = market +0.78 \u00d7 60% + fundamentals -0.03 \u00d7 40%; we own it and it's above the sell level.",
+      "proposal": null
+    },
+    {
+      "ticker": "JPM",
+      "action": "hold",
+      "reason": "HOLD: blended score +0.36 = market +0.52 \u00d7 60% + fundamentals +0.12 \u00d7 40%; we own it and it's above the sell level.",
+      "proposal": null
+    },
+    {
+      "ticker": "VOO",
+      "action": "hold",
+      "reason": "VOO is the benchmark we measure against; it is never traded.",
+      "proposal": null
+    },
+    {
+      "ticker": "NVDA",
+      "action": "hold",
+      "reason": "HOLD (stay out): blended score +0.15 = market -0.17 \u00d7 60% + fundamentals +0.62 \u00d7 40%; not high enough to buy.",
+      "proposal": null
+    }
+  ],
+  "risk_review": [],
+  "orders": [],
+  "trims": [],
+  "stop_maintenance": [
+    {
+      "ticker": "AAPL",
+      "action": "ok",
+      "qty": 29,
+      "stop_price": 302.52,
+      "detail": "Stop-loss in place: 29 shares at $302.52.",
+      "status": "done"
+    },
+    {
+      "ticker": "JPM",
+      "action": "ok",
+      "qty": 28,
+      "stop_price": 330.17,
+      "detail": "Stop-loss in place: 28 shares at $330.17.",
+      "status": "done"
+    },
+    {
+      "ticker": "KO",
+      "action": "ok",
+      "qty": 104,
+      "stop_price": 87.28,
+      "detail": "Stop-loss in place: 104 shares at $87.28.",
+      "status": "done"
+    },
+    {
+      "ticker": "MSFT",
+      "action": "ok",
+      "qty": 19,
+      "stop_price": 480.66,
+      "detail": "Stop-loss in place: 19 shares at $480.66.",
+      "status": "done"
+    },
+    {
+      "ticker": "XOM",
+      "action": "ok",
+      "qty": 60,
+      "stop_price": 152.05,
+      "detail": "Stop-loss in place: 60 shares at $152.05.",
+      "status": "done"
+    }
+  ],
+  "alerts": []
+}
