@@ -42,6 +42,9 @@ def _latest_prices(tickers: list[str]) -> dict[str, float]:
     return {t: float(tr.price) for t, tr in trades.items()}
 
 
+STOP_LOOKBACK_DAYS = 400   # how far back to search for stop-losses that might have fired recently
+
+
 def from_alpaca(client=None, cooldown_days: int = 7) -> PortfolioState:
     """Read the paper account: cash, positions, waiting buys, and recent stop-outs."""
     from alpaca.trading.enums import QueryOrderStatus
@@ -67,12 +70,15 @@ def from_alpaca(client=None, cooldown_days: int = 7) -> PortfolioState:
         pending[o.symbol] = pending.get(o.symbol, 0.0) + remaining * price
 
     # Stop-losses that fired recently (for the re-buy cool-down).
+    # Alpaca's `after` filter is about when an order was *placed*, and a stop-loss is often placed
+    # weeks before it fires. So look back a long way and judge by when it actually *filled*.
     since = datetime.now(timezone.utc) - timedelta(days=cooldown_days)
-    closed = client.get_orders(GetOrdersRequest(status=QueryOrderStatus.CLOSED, after=since, limit=500, nested=False))
+    lookback = datetime.now(timezone.utc) - timedelta(days=STOP_LOOKBACK_DAYS)
+    closed = client.get_orders(GetOrdersRequest(status=QueryOrderStatus.CLOSED, after=lookback, limit=500, nested=False))
     stopped: dict[str, date] = {}
     for o in closed:
         if str(o.type.value) in ("stop", "stop_limit", "trailing_stop") and str(o.side.value) == "sell" \
-                and str(o.status.value) == "filled" and o.filled_at:
+                and str(o.status.value) == "filled" and o.filled_at and o.filled_at >= since:
             d = o.filled_at.date()
             stopped[o.symbol] = max(d, stopped.get(o.symbol, d))
 

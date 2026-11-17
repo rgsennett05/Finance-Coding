@@ -123,3 +123,29 @@ def test_portfolio_manager_waits_instead_of_rebuying():
 def test_settings_have_the_new_limits():
     r = load_settings().risk
     assert r.trim_buffer_pct == 0.01 and r.cooldown_days == 7
+
+
+def test_cooldown_finds_a_stop_placed_long_before_it_fired():
+    """Real bug (Nov 2026): XOM's stop was placed Nov 3, fired Nov 6, and XOM was re-bought Nov 10
+    because the search only looked at orders *placed* in the last 7 days."""
+    from datetime import datetime, timedelta, timezone
+    from types import SimpleNamespace as NS
+    from trading.portfolio import from_alpaca
+
+    now = datetime.now(timezone.utc)
+    E = lambda v: NS(value=v)
+    old_stop = NS(symbol="XOM", type=E("stop"), side=E("sell"), status=E("filled"),
+                  submitted_at=now - timedelta(days=30), filled_at=now - timedelta(days=2))
+    ancient = NS(symbol="KO", type=E("stop"), side=E("sell"), status=E("filled"),
+                 submitted_at=now - timedelta(days=60), filled_at=now - timedelta(days=20))
+
+    class Client:
+        def get_account(self): return NS(portfolio_value="100000", cash="100000")
+        def get_all_positions(self): return []
+        def get_orders(self, req):
+            if str(getattr(req.status, "value", req.status)) == "open":
+                return []
+            return [o for o in (old_stop, ancient) if o.submitted_at >= req.after]
+
+    state = from_alpaca(Client(), cooldown_days=7)
+    assert state.recently_stopped == {"XOM": (now - timedelta(days=2)).date()}   # KO's is too old to count
