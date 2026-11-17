@@ -33,8 +33,11 @@ class FakeAlpaca:
         self.reject_next = False
 
     # --- account -------------------------------------------------------------
+    is_open = True
+
     def get_clock(self):
-        return NS(is_open=True, next_open=datetime(2026, 11, 4, 9, 30, tzinfo=timezone.utc))
+        return NS(is_open=self.is_open, timestamp=datetime.now(timezone.utc),
+                  next_open=datetime(2026, 11, 4, 9, 30, tzinfo=timezone.utc))
 
     def get_account(self):
         value = self.cash + sum(p["qty"] * self.prices[t] for t, p in self.positions.items())
@@ -138,6 +141,7 @@ def world(monkeypatch, tmp_path):
     monkeypatch.setattr("trading.portfolio._latest_prices", lambda tickers: {t: broker.prices.get(t, signal_price.get(t, 100.0)) for t in tickers})
     real_write = journal.write
     monkeypatch.setattr(journal, "write", lambda record: real_write(record, tmp_path))
+    monkeypatch.setattr(journal, "LOG_DIR", tmp_path)
     monkeypatch.setattr(alerts.time, "sleep", lambda s: None)
     monkeypatch.setattr("data.sec.cik_for", lambda t: None)      # no SEC calls in tests
     return NS(broker=broker, signal_price=signal_price, logs=tmp_path)
@@ -207,3 +211,23 @@ def test_rejected_order_raises_an_alert_and_fails_the_run(world, capsys):
 def test_dry_run_sends_nothing(world):
     assert daily.main(["--dry-run"]) == 0
     assert world.broker.orders == {}
+
+
+def test_once_a_day_trades_only_on_the_first_attempt_while_open(world):
+    b = world.broker
+    assert daily.main(["--yes", "--once-a-day"]) == 0
+    assert len(list(world.logs.glob("run_*.json"))) == 1
+    assert daily.main(["--yes", "--once-a-day"]) == 0          # later attempt the same day: skipped
+    assert len(list(world.logs.glob("run_*.json"))) == 1
+    assert sum(o.side.value == "buy" for o in b.orders.values()) == 1
+
+
+def test_once_a_day_late_attempt_after_close_still_runs_once(world, capsys):
+    world.broker.is_open = False                                # every attempt started after the close
+    assert daily.main(["--yes", "--once-a-day"]) == 0
+    assert "Market Analyst" in capsys.readouterr().out          # the first one runs
+    assert daily.main(["--yes", "--once-a-day"]) == 0
+    assert "already happened" in capsys.readouterr().out        # the second one stops
+    world.broker.is_open = True                                 # a closed-market run doesn't block an open one
+    assert daily.main(["--yes", "--once-a-day"]) == 0
+    assert "Market Analyst" in capsys.readouterr().out

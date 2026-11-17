@@ -31,3 +31,19 @@ def write(record: dict, log_dir: Path = LOG_DIR, now: datetime | None = None) ->
     path = log_dir / f"run_{now:%Y-%m-%d_%H%M%S}.json"
     path.write_text(json.dumps(_plain({"run_at": now.isoformat(), **record}), indent=2, default=str))
     return path
+
+
+def paper_runs_on(day, log_dir: Path | None = None) -> list[dict]:
+    """Every real (paper) run logged on a New York calendar day, oldest first."""
+    from zoneinfo import ZoneInfo
+    ny = ZoneInfo("America/New_York")
+    out = []
+    for path in sorted((log_dir or LOG_DIR).glob("run_*.json")):
+        try:
+            rec = json.loads(path.read_text())
+            when = datetime.fromisoformat(rec["run_at"]).astimezone(ny).date()
+        except (ValueError, KeyError, OSError):
+            continue
+        if when == day and rec.get("mode") == "paper":
+            out.append(rec)
+    return out

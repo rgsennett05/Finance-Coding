@@ -130,8 +130,10 @@ agent's reasoning for the latest run.
       `dashboard/app.py`). Chart colors follow the dataviz palette (fund blue `#2a78d6`, VOO orange
       `#eb6834`); the chart waits for 2+ days of history rather than drawing a misleading line.
 - [ ] Owner opens it and confirms they understand what happened today (needs filled positions)
-- [x] Daily automatic run — `.github/workflows/daily-run.yml`, weekdays 15:07 UTC (10:07am ET winter,
-      11:07am ET summer). Runs `pytest` first. Every run log is saved permanently on the
+- [x] Daily automatic run — `.github/workflows/daily-run.yml`, four attempts each weekday during
+      market hours (GitHub often starts schedules hours late); `--once-a-day` lets only the first
+      attempt while the market is open trade (fixed 2026-11-17 after runs drifted past the close).
+      Runs `pytest` first. Every run log is saved permanently on the
       `fund-history` branch (loaded into `logs/` before each run; `python -m trading.history`
       downloads it locally). The repo is public, so this paper-account history is public too.
 - [x] Alerts (`trading/alerts.py`): a failed or rejected order, a failed stop change, or a position

@@ -16,8 +16,14 @@ name: Daily fund run
 
 on:
   schedule:
-    # 15:07 UTC = 10:07am New York in winter, 11:07am in summer — market is open either way.
-    - cron: "7 15 * * 1-5"
+    # GitHub often starts scheduled jobs hours late (in Nov 2026 it ran ~6 hours late, after the
+    # close). So we try four times while the market is open; --once-a-day makes only the first
+    # attempt that runs while the market is open trade, and the others stop straight away.
+    # UTC times; New York is 5 hours behind in winter, 4 in summer — all four are in market hours.
+    - cron: "43 14 * * 1-5"     # 9:43am winter / 10:43am summer
+    - cron: "37 15 * * 1-5"     # 10:37am / 11:37am
+    - cron: "51 16 * * 1-5"     # 11:51am / 12:51pm
+    - cron: "23 18 * * 1-5"     # 1:23pm / 2:23pm
   workflow_dispatch:          # "Run workflow" button in the Actions tab
 
 permissions:
@@ -61,7 +67,7 @@ jobs:
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python -m trading.run --yes
+        run: python -m trading.run --yes --once-a-day
 
       - name: Save run history
         if: always()

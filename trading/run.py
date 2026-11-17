@@ -3,6 +3,11 @@
     python -m trading.run --dry-run   # preview everything, place no orders
     python -m trading.run             # place PAPER orders (asks you to confirm)
     python -m trading.run --yes       # place PAPER orders without asking (for schedules)
+    python -m trading.run --yes --once-a-day   # what the daily schedule runs (see below)
+
+--once-a-day: the schedule starts several times a day because GitHub often starts scheduled jobs
+hours late. Only the first attempt while the market is open trades; later ones stop straight away.
+If every attempt was late and the market has closed, one run still happens so stops get checked.
 """
 from __future__ import annotations
 
@@ -16,10 +21,26 @@ from trading import alerts, journal, orders, stops
 from trading.portfolio import from_alpaca
 
 
+def already_ran_today(clock) -> bool:
+    """True if today's run is done: a run while the market was open, or (market closed) any run."""
+    from zoneinfo import ZoneInfo
+    today = clock.timestamp.astimezone(ZoneInfo("America/New_York")).date()
+    runs = journal.paper_runs_on(today)
+    if any(r.get("market_open") for r in runs):
+        print(f"✅ Today's run ({today}) already happened while the market was open. Nothing to do.")
+        return True
+    if runs and not clock.is_open:
+        print(f"✅ Today's run ({today}) already happened. The market is closed, so nothing to do.")
+        return True
+    return False
+
+
 def main(argv: list[str] | None = None) -> int:
     args = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     args.add_argument("--dry-run", action="store_true", help="preview only; place no orders")
     args.add_argument("--yes", action="store_true", help="don't ask for confirmation before placing paper orders")
+    args.add_argument("--once-a-day", action="store_true",
+                      help="skip if today's run already happened (used by the several-times-a-day schedule)")
     opts = args.parse_args(argv)
 
     try:
@@ -30,6 +51,8 @@ def main(argv: list[str] | None = None) -> int:
 
     settings = load_settings()
     clock = client.get_clock()
+    if opts.once_a_day and not opts.dry_run and already_ran_today(clock):
+        return 0
     portfolio = from_alpaca(client, settings.risk.cooldown_days)
     mode = "DRY RUN" if opts.dry_run else "PAPER TRADING"
     print(f"\n🏙️  Trading City — {mode}")

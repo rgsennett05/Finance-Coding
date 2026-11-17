@@ -51,8 +51,9 @@ python -m agents.portfolio_manager  # dry run: buy/sell/hold decisions + risk re
 
 ## Daily automatic run
 
-GitHub runs the fund every weekday at 10:07am New York time (11:07am in summer) — your computer can
-be off. One-time setup: in the repo, **Settings → Secrets and variables → Actions → New repository
+GitHub runs the fund once every weekday while the market is open — your computer can be off. (It
+tries four times between about 10am and 2pm New York time, because GitHub sometimes starts late; only
+the first attempt trades.) One-time setup: in the repo, **Settings → Secrets and variables → Actions → New repository
 secret**, add `ALPACA_API_KEY` and `ALPACA_SECRET_KEY` (your paper keys).
 
 Every run's log is saved permanently on the `fund-history` branch. To copy that history to your
