@@ -16,6 +16,49 @@ def money(x: float | None) -> str:
     return "—" if x is None or pd.isna(x) else f"${x:,.2f}"
 
 
+def profit_sentence(p: dict, bench: str = "VOO") -> str:
+    """The answer to 'did we make money?' in one or two plain sentences."""
+    made = "made" if p["total"] >= 0 else "lost"
+    text = (f"We started with **{money(p['start'])}** of practice money. It's worth **{money(p['now'])}** now, "
+            f"so the fund has **{made} {money(abs(p['total']))} ({p['total_pct']:+.1%})**.")
+    if p["bench_pct"] is not None:
+        b = p["bench_total"]
+        verdict = "better than" if p["total"] > b else ("worse than" if p["total"] < b else "the same as")
+        text += (f" Putting the same money into {bench} instead would have {'made' if b >= 0 else 'lost'} about "
+                 f"**{money(abs(b))} ({p['bench_pct']:+.1%})**, so the fund did **{verdict}** simply holding {bench}.")
+    return text
+
+
+def profit_explained(d: dict) -> None:
+    p, closed, pos = d.get("profit"), d.get("closed_trades"), d["positions"]
+    if not p:
+        return
+    st.subheader("💬 Did we make money? — explained")
+    st.markdown(profit_sentence(p, d["benchmark"]))
+    c = st.columns(3)
+    c[0].metric("Finished trades", money(p["realized"]), f"{len(closed)} sold", delta_color="off",
+                help="Profit or loss on shares already sold. This is locked in.")
+    c[1].metric("Stocks we still own", money(p["unrealized"]), f"{len(pos)} held", delta_color="off",
+                help="Gain or loss on shares we still hold. It's only 'on paper' and changes every day until we sell.")
+    c[2].metric("Total", money(p["total"]), f"{p['total_pct']:+.2%}",
+                help="Finished trades + stocks we still own (plus any small dividends or fees).")
+    with st.expander(f"Every finished trade ({len(closed)})", expanded=False):
+        if closed.empty:
+            st.write("Nothing has been sold yet.")
+        else:
+            show = closed.sort_values("Sold", ascending=False).copy()
+            for col in ("Bought", "Sold"):
+                show[col] = pd.to_datetime(show[col]).dt.tz_convert("America/New_York").dt.strftime("%b %d")
+            st.dataframe(show, hide_index=True, width="stretch", column_config={
+                "Paid": st.column_config.NumberColumn(format="$%.2f"),
+                "Sold at": st.column_config.NumberColumn(format="$%.2f"),
+                "Profit/loss $": st.column_config.NumberColumn(format="$%+.2f"),
+                "Profit/loss %": st.column_config.NumberColumn(format="percent"),
+            })
+            st.caption("A stop-loss sells a stock automatically if it falls 8% below what we paid, "
+                       "so one bad pick can't turn into a big loss.")
+
+
 @st.fragment(run_every="60s")
 def page():
     """The whole page; refreshes itself every minute so prices and positions stay live."""
@@ -64,6 +107,8 @@ def page():
         delta_color="off" if bench_total is None else "normal",
         help=GLOSSARY["Benchmark"],
     )
+
+    profit_explained(d)
 
     # --------------------------------------------------------------------------
     # Live prices

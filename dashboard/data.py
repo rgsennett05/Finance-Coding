@@ -126,6 +126,59 @@ def orders_table(orders) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _fills(orders) -> list[dict]:
+    """Every filled buy/sell (including stop-loss legs), oldest first."""
+    out = []
+    for o in orders:
+        for leg in [o, *(getattr(o, "legs", None) or [])]:
+            if str(leg.status.value) != "filled" or not leg.filled_at or not leg.filled_avg_price:
+                continue
+            kind = str(leg.type.value)
+            out.append({
+                "ticker": leg.symbol, "side": str(leg.side.value), "time": leg.filled_at,
+                "qty": int(float(leg.filled_qty or leg.qty)), "price": float(leg.filled_avg_price),
+                "how": "stop-loss" if "stop" in kind else ("sell" if str(leg.side.value) == "sell" else "buy"),
+            })
+    return sorted(out, key=lambda f: f["time"])
+
+
+def closed_trades(orders) -> pd.DataFrame:
+    """Every sale with its profit or loss, measured against the average price we paid."""
+    held: dict[str, list[float]] = {}          # ticker -> [shares, avg cost, first buy time]
+    rows = []
+    for f in _fills(orders):
+        t = f["ticker"]
+        qty, cost, since = held.get(t, [0, 0.0, None])
+        if f["side"] == "buy":
+            held[t] = [qty + f["qty"], (qty * cost + f["qty"] * f["price"]) / (qty + f["qty"]), since or f["time"]]
+            continue
+        sold = min(f["qty"], qty) if qty else f["qty"]
+        rows.append({
+            "Stock": t, "Shares": sold, "Bought": since, "Paid": cost, "Sold": f["time"], "Sold at": f["price"],
+            "Profit/loss $": (f["price"] - cost) * sold,
+            "Profit/loss %": (f["price"] / cost - 1) if cost else float("nan"),
+            "Why sold": {"stop-loss": "Stop-loss (fell 8% below what we paid)", "sell": "Fund decided to sell / trim"}[f["how"]],
+        })
+        held[t] = [qty - sold, cost, since if qty - sold > 0 else None]
+    return pd.DataFrame(rows, columns=["Stock", "Shares", "Bought", "Paid", "Sold", "Sold at",
+                                       "Profit/loss $", "Profit/loss %", "Why sold"])
+
+
+def profit_breakdown(start_value: float, value_now: float, closed: pd.DataFrame, positions: pd.DataFrame,
+                     bench_change: float | None) -> dict:
+    """The numbers behind 'did we make money?', split into finished trades and stocks still held."""
+    realized = float(closed["Profit/loss $"].sum()) if not closed.empty else 0.0
+    unrealized = float(positions["Gain/loss $"].sum()) if not positions.empty else 0.0
+    total = value_now - start_value
+    return {
+        "start": start_value, "now": value_now, "total": total, "total_pct": total / start_value if start_value else 0.0,
+        "realized": realized, "unrealized": unrealized,
+        "other": total - realized - unrealized,       # e.g. dividends or fees; normally ~0
+        "bench_pct": bench_change,
+        "bench_total": None if bench_change is None else start_value * bench_change,
+    }
+
+
 def load_live(days: int = 90) -> dict:
     """One call that gathers everything live from Alpaca."""
     from datetime import timedelta
@@ -143,6 +196,8 @@ def load_live(days: int = 90) -> dict:
     settings = load_settings()
     open_orders = list(client.get_orders(GetOrdersRequest(status=QueryOrderStatus.OPEN, nested=True)))
     recent = list(client.get_orders(GetOrdersRequest(status=QueryOrderStatus.ALL, limit=50, nested=True)))
+    every = list(client.get_orders(GetOrdersRequest(status=QueryOrderStatus.CLOSED, limit=500, nested=True,
+                                                    after=datetime.now(timezone.utc) - timedelta(days=730))))
 
     hist = client.get_portfolio_history(GetPortfolioHistoryRequest(period="3M", timeframe="1D"))
     fund = pd.Series(
@@ -165,13 +220,25 @@ def load_live(days: int = 90) -> dict:
     except Exception:
         quotes = {}
 
+    perf = performance_vs_benchmark(fund, bench)
+    positions = positions_table(client, open_orders)
+    account = account_overview(client)
+    closed = closed_trades(every)
+    started = fund[fund > 0]
+    bench_rows = perf[perf.series == settings.benchmark]
+    profit = profit_breakdown(
+        float(started.iloc[0]) if not started.empty else account["portfolio_value"], account["portfolio_value"],
+        closed, positions, float(bench_rows["pct"].iloc[-1]) if len(bench_rows) >= 2 else None)
+
     return {
+        "profit": profit,
+        "closed_trades": closed,
         "quotes": quotes,
-        "account": account_overview(client),
-        "positions": positions_table(client, open_orders),
+        "account": account,
+        "positions": positions,
         "orders": orders_table(recent),
         "open_orders": len(open_orders),
-        "performance": performance_vs_benchmark(fund, bench),
+        "performance": perf,
         "clock": client.get_clock(),
         "benchmark": settings.benchmark,
     }
