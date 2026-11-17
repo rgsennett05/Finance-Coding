@@ -13,19 +13,26 @@ FUND_COLOR, BENCH_COLOR = "#2a78d6", "#eb6834"   # categorical slots 1 and 2
 
 
 def money(x: float | None) -> str:
-    return "—" if x is None or pd.isna(x) else f"${x:,.2f}"
+    if x is None or pd.isna(x):
+        return "—"
+    return f"-${-x:,.2f}" if x < 0 else f"${x:,.2f}"
+
+
+def md_money(x: float | None) -> str:
+    """money() for st.markdown, where a bare $ would start a math formula."""
+    return money(x).replace("$", "\\$")
 
 
 def profit_sentence(p: dict, bench: str = "VOO") -> str:
     """The answer to 'did we make money?' in one or two plain sentences."""
     made = "made" if p["total"] >= 0 else "lost"
-    text = (f"We started with **{money(p['start'])}** of practice money. It's worth **{money(p['now'])}** now, "
-            f"so the fund has **{made} {money(abs(p['total']))} ({p['total_pct']:+.1%})**.")
+    text = (f"We started with **{md_money(p['start'])}** of practice money. It's worth **{md_money(p['now'])}** now, "
+            f"so the fund has **{made} {md_money(abs(p['total']))} ({p['total_pct']:+.1%})**.")
     if p["bench_pct"] is not None:
         b = p["bench_total"]
         verdict = "better than" if p["total"] > b else ("worse than" if p["total"] < b else "the same as")
         text += (f" Putting the same money into {bench} instead would have {'made' if b >= 0 else 'lost'} about "
-                 f"**{money(abs(b))} ({p['bench_pct']:+.1%})**, so the fund did **{verdict}** simply holding {bench}.")
+                 f"**{md_money(abs(b))} ({p['bench_pct']:+.1%})**, so the fund did **{verdict}** simply holding {bench}.")
     return text
 
 
@@ -36,9 +43,9 @@ def profit_explained(d: dict) -> None:
     st.subheader("💬 Did we make money? — explained")
     st.markdown(profit_sentence(p, d["benchmark"]))
     c = st.columns(3)
-    c[0].metric("Finished trades", money(p["realized"]), f"{len(closed)} sold", delta_color="off",
+    c[0].metric(f"Finished trades ({len(closed)} sold)", money(p["realized"]),
                 help="Profit or loss on shares already sold. This is locked in.")
-    c[1].metric("Stocks we still own", money(p["unrealized"]), f"{len(pos)} held", delta_color="off",
+    c[1].metric(f"Stocks we still own ({len(pos)})", money(p["unrealized"]),
                 help="Gain or loss on shares we still hold. It's only 'on paper' and changes every day until we sell.")
     c[2].metric("Total", money(p["total"]), f"{p['total_pct']:+.2%}",
                 help="Finished trades + stocks we still own (plus any small dividends or fees).")
@@ -93,6 +100,8 @@ def page():
     bench_rows = perf[perf.series == "VOO"]
     fund_days = len(fund_rows)
     fund_total = fund_rows["pct"].iloc[-1] if fund_days else 0.0
+    if d.get("profit"):
+        fund_total = d["profit"]["total_pct"]      # live value now, not yesterday's close
     bench_total = bench_rows["pct"].iloc[-1] if fund_days >= 2 and not bench_rows.empty else None
 
     c = st.columns(4)

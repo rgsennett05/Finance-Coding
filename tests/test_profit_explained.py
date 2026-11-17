@@ -46,4 +46,9 @@ def test_breakdown_and_plain_sentence():
     p = profit_breakdown(100_000, 98_447, closed, pos, bench_change=-0.024)
     assert p["total"] == pytest.approx(-1553) and p["other"] == pytest.approx(0)
     text = profit_sentence(p)
-    assert "lost $1,553.00" in text and "did **better than** simply holding VOO" in text
+    assert "lost \\$1,553.00" in text and "did **better than** simply holding VOO" in text
+
+
+def test_money_puts_the_minus_sign_first():
+    from dashboard.overview import money
+    assert money(-2446.93) == "-$2,446.93" and money(785.6) == "$785.60"
